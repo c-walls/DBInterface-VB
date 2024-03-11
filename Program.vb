@@ -1,11 +1,13 @@
 Imports System
+Imports System.Drawing' May not need if switching to TableLayoutPanel
 Imports System.Windows.Forms
 Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
 ' 1. Seperate forms into different files
 ' 2. Make the dummy call using the button and display it
-' 3. Organize Interface with the TableLayoutPanel manager (Also check for VS code designer extension)
+' 3. Use a config file to store the connection string values
+' 4. Organize Interface with the TableLayoutPanel manager (Also check for VS code designer extension)
 
 Public Class MainForm
     Inherits Form
