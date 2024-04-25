@@ -16,6 +16,8 @@ Public Class MainForm
     Private connection As OracleConnection
     Private button As New Button()
     Private dataViewer As New DataGridView()
+    Private proposalNo As New TextBox()
+    Private customerNo As New TextBox()
 
     Public Sub New()
         ' Initialize the form
@@ -27,6 +29,13 @@ Public Class MainForm
         ' Initialize the connection
         connection = New OracleConnection(connectionString)
         connection.Open()
+
+        ' Configure textboxes
+        proposalNo.Location = New Point(10,10)
+        Me.Controls.Add(proposalNo)
+
+        customerNo.Location = New Point(10, 50)
+        Me.Controls.Add(customerNo)
 
         ' Configure button
         button.Text = "Run Query"
