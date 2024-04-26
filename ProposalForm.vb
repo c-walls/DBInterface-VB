@@ -3,8 +3,8 @@ Imports System.Data
 Imports System.Drawing
 Imports System.Windows.Forms
 
-Public Class ProposalForm
-    Inherits Form
+Public Class ProposalPage
+    Inherits UserControl
     
     Private proposalNo As New TextBox() With {.ReadOnly = True}
     Private proposalNoLabel As New Label() With {.Text = "Proposal Number:"}
@@ -16,11 +16,11 @@ Public Class ProposalForm
     Private billingNameLabel As New Label() With {.Text = "Customer Name:"}
     Private billingAddress As New TextBox() With {.ReadOnly = True, .Multiline = True}
     Private billingAddressLabel As New Label() With {.Text = "Billing Address:"}
-    Private locations As New NumericUpDown() With {.Value = 1, .Minimum = 1, .Maximum = 20}
+    Private locations As New NumericUpDown() With {.Minimum = 1, .Maximum = 20}
     Private locationsLabel As New Label() With {.Text = "Locations:"}
-    Private dateWritten As New DateTimePicker() With {.Value = DateTime.Now, .Format = DateTimePickerFormat.Short}
+    Private dateWritten As New DateTimePicker() With {.Format = DateTimePickerFormat.Short}
     Private dateWrittenLabel As New Label() With {.Text = "Date Written:"}
-    Private status As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList, .SelectedIndex = 0}
+    Private status As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private statusLabel As New Label() With {.Text = "Proposal Status:"}
     Private decisionDate As New DateTimePicker() With {.ShowCheckBox = True, .Checked = False, .Format = DateTimePickerFormat.Short}
     Private decisionDateLabel As New Label() With {.Text = "Decision Date:"}
@@ -37,12 +37,6 @@ Public Class ProposalForm
     Private mainLabels As New List(Of Control) From {proposalNoLabel, customerNoLabel, estimationMethodLabel, billingNameLabel, billingAddressLabel, dateWrittenLabel, statusLabel, decisionDateLabel, customerTypeLabel, salespersonLabel, locationsLabel}
 
     Public Sub New()
-        ' Initialize the form
-        Me.Text = "Insulation Unlimited Database Interface"
-        Me.Size = Screen.PrimaryScreen.Bounds.Size
-        Dim screenWidth As Integer = Me.Size.Width
-        Dim screenHeight As Integer = Me.Size.Height
-
         ' Create a header label
         Dim headerLabel As New Label() With {
             .Text = "Proposal Form",
@@ -124,11 +118,27 @@ Public Class ProposalForm
         estimationMethod.Items.AddRange(New String() {" Walk Through", " Floor Plan"})
         tasksDG.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         tasksDG.Dock = DockStyle.Fill
+        
+        AddHandler Me.Load, AddressOf UserControl_Load
+    End Sub
 
+    Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        PopulateSalespersonComboBox()
+        salesperson.SelectedItem = ""
+        Status.SelectedIndex = 0
+        locations.Value = 1
+        DateWritten.Value = DateTime.Now
+        BillingName.Select()
     End Sub
 
     Private Sub PopulateSalespersonComboBox()
         Dim dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Emp_Name FROM Employees WHERE Emp_Role = 'Salesperson'")
+        
+        ' Insert an empty row at the beginning of the DataTable.
+        Dim row As DataRow = dataTable.NewRow()
+        row("Emp_Name") = ""
+        dataTable.Rows.InsertAt(row, 0)
+        
         salesperson.DataSource = dataTable
         salesperson.DisplayMember = "Emp_Name"
         salesperson.ValueMember = "Emp_Name"

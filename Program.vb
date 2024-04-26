@@ -9,15 +9,21 @@ Imports Oracle.ManagedDataAccess.Client
 
 Public Class MainForm
     Inherits Form
-    Private ProposalForm As New ProposalForm()
+    Dim screenWidth As Integer = Me.Size.Width
+    Dim screenHeight As Integer = Me.Size.Height
+    Private ProposalPage As New ProposalPage() With {.Dock = DockStyle.Fill}
+    Private Panel As New Panel() With {.Dock = DockStyle.Fill}
 
     Public Sub New()
-        ProposalForm.Show()
+        Me.Text = "Insulation Unlimited Database Interface"
+        Me.Size = Screen.PrimaryScreen.Bounds.Size
+        Controls.Add(Panel)
+        Panel.Controls.Add(ProposalPage)
     End Sub
 End Class
 
 Public Class DBHandler
-    Private Shared connectionString As String = File.ReadAllText("config.txt").Trim()
+    Private Shared connectionString As String = "User Id=ADMIN;Password=StRoNg_password123;Data Source=ovyv9ufieozhf2yr_medium;TNS_ADMIN=C:\\Users\\caleb\\OneDrive\\Documents\\Coding Projects\\Database\\Wallet_OVYV9UFIEOZHF2YR;Pooling=true;"
 
     Public Shared Function ExecuteQuery(query As String) As DataTable
         Dim dataTable As New DataTable()

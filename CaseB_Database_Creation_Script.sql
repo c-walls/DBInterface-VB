@@ -287,3 +287,5 @@ SELECT COUNT(*) FROM Employees;
 SELECT COUNT(*) FROM Materials;
 SELECT COUNT(*) FROM Proposals;
 SELECT COUNT(*) FROM ProposedTasks;
+
+COMMIT;
