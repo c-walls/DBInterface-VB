@@ -28,7 +28,7 @@ CREATE TABLE Customers (
     CustomerType VARCHAR(20) CONSTRAINT CustomerType_Required NOT NULL,
     BillCycle_Date INTEGER DEFAULT 1 CONSTRAINT BillCycle_Required NOT NULL,
 CONSTRAINT PKCustomer PRIMARY KEY (Cust_No),
-CONSTRAINT ChkCustomerType CHECK (CustomerType IN ('General Contractor', 'Government', 'Homeowner')),
+CONSTRAINT ChkCustomerType CHECK (CustomerType IN ('General Contractor', 'Commercial', 'Government', 'Residential')),
 CONSTRAINT ChkBillCycle CHECK (BillCycle_Date BETWEEN 1 AND 30)
 );
 
@@ -155,13 +155,13 @@ INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, CustomerType, B
 VALUES ('C003', 'Oakland Transit Authority', '789 Capitol Ave, Washington, DC 20001', 'Government', 1);
 
 INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, CustomerType, BillCycle_Date)
-VALUES ('C004', 'Justin Hershowitz', '321 Elm Ln, Mytown, TX 54321', 'Homeowner', 5);
+VALUES ('C004', 'Justin Hershowitz', '321 Elm Ln, Mytown, TX 54321', 'Residential', 5);
 
 INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, CustomerType, BillCycle_Date)
-VALUES ('C005', 'Cerberus Industrial Building Solutions LLC', '159 Tower Blvd, Bigcity, CA 90210', 'General Contractor', 13);
+VALUES ('C005', 'Cerberus Industrial Solutions LLC', '159 Tower Blvd, Bigcity, CA 90210', 'Commercial', 13);
 
 INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, CustomerType, BillCycle_Date)
-VALUES ('C006', 'Tiffany Chesterton', '789 Maple Ave, Suburbville, IL 60610', 'Homeowner', 15);
+VALUES ('C006', 'Tiffany Chesterton', '789 Maple Ave, Suburbville, IL 60610', 'Residential', 15);
 
 INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, CustomerType, BillCycle_Date)
 VALUES ('C007', 'Green Valley Contractors', '456 Pine St, Greenville, OR 97330', 'General Contractor', 1);
@@ -170,7 +170,7 @@ INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, CustomerType, B
 VALUES ('C008', 'Southeastern University', '123 College Rd, Unitown, MA 02155', 'Government', 1);
 
 INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, CustomerType, BillCycle_Date)
-VALUES ('C009', 'Rick Anderson', '987 Valley Dr, Hilltown, CO 80501', 'Homeowner', 3);
+VALUES ('C009', 'Rick Anderson', '987 Valley Dr, Hilltown, CO 80501', 'Residential', 3);
 
 INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, CustomerType, BillCycle_Date)
 VALUES ('C010', 'Apex Developers LLC', '654 City Center Blvd, Metro, NY 10001', 'General Contractor', 25);
