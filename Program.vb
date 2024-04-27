@@ -10,6 +10,8 @@ Imports Oracle.ManagedDataAccess.Client
 ' 3. Proposal Form --> Figure out Proposal task table
 ' 4. Proposal Form --> Fix Search Suggestion ComboBox
 ' 5. Proposal Form --> Add buttons (combined save / update & Close?Cancel?Confirm?)
+' 6. Database --> Add new INSERT statements and constraint for remaining tables
+' 7. Database --> Add auto-increment and triggers as needed
 ' 6. Create Homepage / Menu
 ' 7. Finish Work Order Form
 ' 8. Create Work Assignment Form
