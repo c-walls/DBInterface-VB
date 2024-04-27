@@ -12,7 +12,7 @@ Public Class ProposalPage
     Private customerNoLabel As New Label() With {.Text = "Customer Number:"}
     Private estimationMethod As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private estimationMethodLabel As New Label() With {.Text = "Estimation Method:"}
-    Private billingName As New ComboBox()
+    Private WithEvents billingName As New ComboBox()
     Private billingNameLabel As New Label() With {.Text = "Customer Name:"}
     Private billingAddress As New TextBox() With {.ReadOnly = True, .Multiline = True}
     Private billingAddressLabel As New Label() With {.Text = "Billing Address:"}
@@ -35,6 +35,7 @@ Public Class ProposalPage
 
     Private mainFields As New List(Of Control) From {proposalNo, customerNo, estimationMethod, billingName, billingAddress, dateWritten, status, decisionDate, salesperson, locations}
     Private mainLabels As New List(Of Control) From {proposalNoLabel, customerNoLabel, estimationMethodLabel, billingNameLabel, billingAddressLabel, dateWrittenLabel, statusLabel, decisionDateLabel, customerTypeLabel, salespersonLabel, locationsLabel}
+    Private cust_DataTable As New DataTable()
 
     Public Sub New()
         ' Create a header label
@@ -120,10 +121,12 @@ Public Class ProposalPage
         tasksDG.Dock = DockStyle.Fill
         
         AddHandler Me.Load, AddressOf UserControl_Load
+        ' AddHandler billingName.TextUpdate, AddressOf billingName_TextUpdate
     End Sub
 
     Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        PopulateSalespersonComboBox()
+        PopulateCustomerList()
+        PopulateSalespersonList()
         salesperson.SelectedItem = ""
         Status.SelectedIndex = 0
         locations.Value = 1
@@ -131,7 +134,20 @@ Public Class ProposalPage
         BillingName.Select()
     End Sub
 
-    Private Sub PopulateSalespersonComboBox()
+    Private Sub PopulateCustomerList()
+        cust_DataTable = DBHandler.ExecuteQuery("SELECT Cust_BillName FROM Customers")
+        
+        ' Insert an empty row at the beginning of the cust_DataTable.
+        Dim row As DataRow = cust_DataTable.NewRow()
+        row("Cust_BillName") = ""
+        cust_DataTable.Rows.InsertAt(row, 0)
+        
+        billingName.DataSource = cust_DataTable
+        billingName.DisplayMember = "Cust_BillName"
+        billingName.ValueMember = "Cust_BillName"
+    End Sub
+
+    Private Sub PopulateSalespersonList()
         Dim dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Emp_Name FROM Employees WHERE Emp_Role = 'Salesperson'")
         
         ' Insert an empty row at the beginning of the DataTable.
@@ -143,4 +159,11 @@ Public Class ProposalPage
         salesperson.DisplayMember = "Emp_Name"
         salesperson.ValueMember = "Emp_Name"
     End Sub
+
+    ' --- TO-DO: Fix search suggestion functionality ---
+    'Private Sub billingName_TextUpdate(sender As Object, e As EventArgs) Handles billingName.TextUpdate
+    '    Dim dv As DataView = cust_DataTable.DefaultView
+    '    dv.RowFilter = String.Format("Cust_BillName Like '%{0}%'", billingName.Text)
+    '    billingName.DataSource = dv
+    'End Sub
 End Class
