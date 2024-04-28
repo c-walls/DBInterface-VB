@@ -14,7 +14,7 @@ Public Class ProposalPage
     Private estimationMethodLabel As New Label() With {.Text = "Estimation Method:"}
     Private WithEvents billingName As New ComboBox()
     Private billingNameLabel As New Label() With {.Text = "Customer Name:"}
-    Private billingAddress As New TextBox() With {.ReadOnly = True, .Multiline = True}
+    Private billingAddress As New TextBox() With {.ReadOnly = True, .Multiline = True, .Height = billingName.Height * 2}
     Private billingAddressLabel As New Label() With {.Text = "Billing Address:"}
     Private locations As New NumericUpDown() With {.Minimum = 1, .Maximum = 20}
     Private locationsLabel As New Label() With {.Text = "Locations:"}
@@ -24,7 +24,13 @@ Public Class ProposalPage
     Private statusLabel As New Label() With {.Text = "Proposal Status:"}
     Private WithEvents decisionDate As New DateTimePicker() With {.ShowCheckBox = True, .Checked = False, .Format = DateTimePickerFormat.Short}
     Private decisionDateLabel As New Label() With {.Text = "Decision Date:"}
-    Private tasksDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
+    Private WithEvents tasksDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
+    Private subTotalLabel As New Label() With {.Text = "Total Before Tax:", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
+    Private calc_subTotal As New Label() With {.Text = "$0.00", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
+    Private taxLabel As New Label() With {.Text = "Tax (8.2%):", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
+    Private calc_tax As New Label() With {.Text = "$0.00", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
+    Private totalLabel As New Label() With {.Text = "Total:", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
+    Private calc_total As New Label() With {.Text = "$0.00", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
     Private customerType1 As New RadioButton() With {.Text = "General Contractor", .Anchor = AnchorStyles.Left, .Padding = New Padding(40, 0, 0, 0), .Width = 200}
     Private customerType2 As New RadioButton() With {.Text = "Commercial", .Anchor = AnchorStyles.Left}
     Private customerType3 As New RadioButton() With {.Text = "Government", .Anchor = AnchorStyles.Left, .Padding = New Padding(40, 0, 0, 0), .Width = 200}
@@ -34,7 +40,7 @@ Public Class ProposalPage
     Private salespersonLabel As New Label() With {.Text = "Salesperson:"}
 
     Private mainFields As New List(Of Control) From {proposalNo, customerNo, estimationMethod, billingName, billingAddress, dateWritten, status, decisionDate, salesperson, locations}
-    Private mainLabels As New List(Of Control) From {proposalNoLabel, customerNoLabel, estimationMethodLabel, billingNameLabel, billingAddressLabel, dateWrittenLabel, statusLabel, decisionDateLabel, customerTypeLabel, salespersonLabel, locationsLabel}
+    Private mainLabels As New List(Of Control) From {proposalNoLabel, customerNoLabel, estimationMethodLabel, billingNameLabel, billingAddressLabel, dateWrittenLabel, statusLabel, decisionDateLabel, customerTypeLabel, salespersonLabel, locationsLabel, subTotalLabel, taxLabel, totalLabel}
     Private cust_DataTable As New DataTable()
 
     Public Sub New()
@@ -44,7 +50,7 @@ Public Class ProposalPage
             .Dock = DockStyle.Top,
             .Font = New Font("Arial", 24, FontStyle.Bold),
             .TextAlign = ContentAlignment.MiddleCenter,
-            .Height = 50}
+            .Height = 70}
         Me.Controls.Add(headerLabel)
 
         ' Configure TableLayoutPanel
@@ -53,55 +59,71 @@ Public Class ProposalPage
         tableLayoutPanel.ColumnCount = 5
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20))
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20))
+        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 15))
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20))
-        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20))
-        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20))
-        tableLayoutPanel.RowCount = 12
+        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25))
+        tableLayoutPanel.RowCount = 17
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 25))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 15))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 1.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 1.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 1.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 1.75))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 1.75))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 12.5))
         Me.Controls.Add(tableLayoutPanel)
 
         ' Configure Data Controls
-        tableLayoutPanel.Controls.Add(proposalNoLabel, 0, 1)
-        tableLayoutPanel.Controls.Add(proposalNo, 1, 1)
-        tableLayoutPanel.Controls.Add(customerNoLabel, 0, 2)
-        tableLayoutPanel.Controls.Add(customerNo, 1, 2)
-        tableLayoutPanel.Controls.Add(estimationMethodLabel, 0, 3)
-        tableLayoutPanel.Controls.Add(estimationMethod, 1, 3)
-        tableLayoutPanel.Controls.Add(billingNameLabel, 0, 4)
-        tableLayoutPanel.Controls.Add(billingName, 1, 4)
-        tableLayoutPanel.Controls.Add(billingAddressLabel, 0, 5)
-        tableLayoutPanel.Controls.Add(billingAddress, 1, 5)
-        tableLayoutPanel.Controls.Add(locationsLabel, 0, 6)
-        tableLayoutPanel.Controls.Add(locations, 1, 6)
-        tableLayoutPanel.Controls.Add(customerTypeLabel, 0, 8)
-        tableLayoutPanel.Controls.Add(customerType1, 1, 8)
-        tableLayoutPanel.Controls.Add(customerType2, 2, 8)
-        tableLayoutPanel.Controls.Add(customerType3, 1, 9)
-        tableLayoutPanel.Controls.Add(customerType4, 2, 9)
-        tableLayoutPanel.Controls.Add(salespersonLabel, 0, 10)
-        tableLayoutPanel.Controls.Add(salesperson, 1, 10)
-        tableLayoutPanel.Controls.Add(dateWrittenLabel, 3, 1)
-        tableLayoutPanel.Controls.Add(dateWritten, 4, 1)
-        tableLayoutPanel.Controls.Add(statusLabel, 3, 2)
-        tableLayoutPanel.Controls.Add(status, 4, 2)
-        tableLayoutPanel.Controls.Add(decisionDateLabel, 3, 3)
-        tableLayoutPanel.Controls.Add(decisionDate, 4, 3)
+        tableLayoutPanel.Controls.Add(proposalNoLabel, 0, 2)
+        tableLayoutPanel.Controls.Add(proposalNo, 1, 2)
+        tableLayoutPanel.Controls.Add(customerNoLabel, 0, 3)
+        tableLayoutPanel.Controls.Add(customerNo, 1, 3)
+        tableLayoutPanel.Controls.Add(estimationMethodLabel, 0, 4)
+        tableLayoutPanel.Controls.Add(estimationMethod, 1, 4)
+        tableLayoutPanel.Controls.Add(billingNameLabel, 0, 5)
+        tableLayoutPanel.Controls.Add(billingName, 1, 5)
+        tableLayoutPanel.Controls.Add(billingAddressLabel, 0, 6)
+        tableLayoutPanel.Controls.Add(billingAddress, 1, 6)
+        tableLayoutPanel.Controls.Add(locationsLabel, 0, 7)
+        tableLayoutPanel.Controls.Add(locations, 1, 7)
+        tableLayoutPanel.Controls.Add(subTotalLabel, 0, 9)
+        tableLayoutPanel.Controls.Add(calc_subTotal, 4, 9)
+        tableLayoutPanel.Controls.Add(taxLabel, 0, 10)
+        tableLayoutPanel.Controls.Add(calc_tax, 4, 10)
+        tableLayoutPanel.Controls.Add(totalLabel, 0, 11)
+        tableLayoutPanel.Controls.Add(calc_total, 4, 11)
+        tableLayoutPanel.Controls.Add(customerTypeLabel, 0, 13)
+        tableLayoutPanel.Controls.Add(customerType1, 1, 13)
+        tableLayoutPanel.Controls.Add(customerType2, 2, 13)
+        tableLayoutPanel.Controls.Add(customerType3, 1, 14)
+        tableLayoutPanel.Controls.Add(customerType4, 2, 14)
+        tableLayoutPanel.Controls.Add(salespersonLabel, 0, 15)
+        tableLayoutPanel.Controls.Add(salesperson, 1, 15)
+        tableLayoutPanel.Controls.Add(dateWrittenLabel, 3, 2)
+        tableLayoutPanel.Controls.Add(dateWritten, 4, 2)
+        tableLayoutPanel.Controls.Add(statusLabel, 3, 3)
+        tableLayoutPanel.Controls.Add(status, 4, 3)
+        tableLayoutPanel.Controls.Add(decisionDateLabel, 3, 4)
+        tableLayoutPanel.Controls.Add(decisionDate, 4, 4)
 
         ' Configure DataGridView
-        tasksDG.Margin = New Padding(100, 0, 75, 0)
+        tasksDG.Margin = New Padding(200, 40, 200, 10)
         tableLayoutPanel.SetColumnSpan(tasksDG, 5)
-        tableLayoutPanel.Controls.Add(tasksDG, 0, 7)
+        tableLayoutPanel.Controls.Add(tasksDG, 0, 8)
+        tasksDG.Columns.Add("Task", "Task")
+        tasksDG.Columns.Add("SquareFeet", "Square Feet")
+        tasksDG.Columns.Add("PricePerSqFt", "Price/SqFt")
+        tasksDG.Columns.Add("Amount", "Amount")
+        tasksDG.Rows.Add(3)
 
         ' Format main controls
         For Each control As Control In mainFields
@@ -125,6 +147,8 @@ Public Class ProposalPage
         AddHandler Me.Load, AddressOf UserControl_Load
         AddHandler billingName.SelectionChangeCommitted, AddressOf billingName_SelectionChangeCommitted
         AddHandler decisionDate.ValueChanged, AddressOf decisionDate_ValueChanged
+        AddHandler tasksDG.CellValidating, AddressOf tasksDG_CellValidating
+        AddHandler tasksDG.CellValueChanged, AddressOf tasksDG_CellValueChanged
     End Sub
 
     Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -168,8 +192,10 @@ Public Class ProposalPage
     Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted
         ' Query the database to get the corresponding address and set it to the address field.
         Dim selectedBillingName As String = billingName.SelectedValue.ToString()
-        Dim dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Cust_BillAddress FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
-        billingAddress.Text = If(dataTable.Rows.Count = 1, dataTable.Rows(0)("Cust_BillAddress").ToString(), "")
+        Dim num_dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Cust_No FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
+        customerNo.Text = If(num_dataTable.Rows.Count = 1, num_dataTable.Rows(0)("Cust_No").ToString(), "")
+        Dim addr_dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Cust_BillAddress FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
+        billingAddress.Text = If(addr_dataTable.Rows.Count = 1, addr_dataTable.Rows(0)("Cust_BillAddress").ToString(), "")
         
         ' Removes highlighting from text after field update
         Me.BeginInvoke(New Action(Sub() billingName.SelectionLength = 0))
@@ -183,6 +209,28 @@ Public Class ProposalPage
         If decisionDate.Value.Date < DateWritten.Value.Date OrElse decisionDate.Value.Date > DateTime.Now.Date Then
             MessageBox.Show("Decision date invalid." & vbCrLf & vbCrLf & "Choose a date between the creation date and today.", "Invalid Date", MessageBoxButtons.OK, MessageBoxIcon.Error)
             decisionDate.Value = DateTime.Now.Date
+        End If
+    End Sub
+
+    Private Sub tasksDG_CellValidating(sender As Object, e As DataGridViewCellValidatingEventArgs) Handles tasksDG.CellValidating
+        ' Check if the current column is the 4th column
+        If e.ColumnIndex = 3 Then
+            Dim newDecimal As Decimal
+
+            ' Check if the input is a valid decimal
+            If Not Decimal.TryParse(e.FormattedValue.ToString(), newDecimal) Then
+                e.Cancel = True
+                MessageBox.Show("The 'Amount' column only allows decimal numbers.")
+            End If
+        End If
+    End Sub
+
+    Private Sub tasksDG_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles tasksDG.CellValueChanged
+        If e.ColumnIndex = 3 Then ' Check if the changed cell is in the 4th column
+            Dim subtotal As Decimal = tasksDG.Rows.Cast(Of DataGridViewRow)().
+                Where(Function(row) Not row.IsNewRow).
+                Sum(Function(row) Convert.ToDecimal(row.Cells(3).Value))
+            subTotalLabel.Text = subtotal.ToString("F2")
         End If
     End Sub
 
