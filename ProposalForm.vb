@@ -22,7 +22,7 @@ Public Class ProposalPage
     Private dateWrittenLabel As New Label() With {.Text = "Date Written:"}
     Private status As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private statusLabel As New Label() With {.Text = "Proposal Status:"}
-    Private decisionDate As New DateTimePicker() With {.ShowCheckBox = True, .Checked = False, .Format = DateTimePickerFormat.Short}
+    Private WithEvents decisionDate As New DateTimePicker() With {.ShowCheckBox = True, .Checked = False, .Format = DateTimePickerFormat.Short}
     Private decisionDateLabel As New Label() With {.Text = "Decision Date:"}
     Private tasksDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
     Private customerType1 As New RadioButton() With {.Text = "General Contractor", .Anchor = AnchorStyles.Left, .Padding = New Padding(40, 0, 0, 0), .Width = 200}
@@ -116,12 +116,15 @@ Public Class ProposalPage
         Next
 
         status.Items.AddRange(New String() {" Pending", " Accepted", " Rejected"})
+        status.Enabled = decisionDate.Checked
         estimationMethod.Items.AddRange(New String() {" Walk Through", " Floor Plan"})
         tasksDG.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         tasksDG.Dock = DockStyle.Fill
         
+        ' Event Handlers
         AddHandler Me.Load, AddressOf UserControl_Load
-        ' AddHandler billingName.TextUpdate, AddressOf billingName_TextUpdate
+        AddHandler billingName.SelectionChangeCommitted, AddressOf billingName_SelectionChangeCommitted
+        AddHandler decisionDate.ValueChanged, AddressOf decisionDate_ValueChanged
     End Sub
 
     Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -145,6 +148,8 @@ Public Class ProposalPage
         billingName.DataSource = cust_DataTable
         billingName.DisplayMember = "Cust_BillName"
         billingName.ValueMember = "Cust_BillName"
+        billingName.AutoCompleteMode = AutoCompleteMode.SuggestAppend
+        billingName.AutoCompleteSource = AutoCompleteSource.ListItems
     End Sub
 
     Private Sub PopulateSalespersonList()
@@ -160,10 +165,25 @@ Public Class ProposalPage
         salesperson.ValueMember = "Emp_Name"
     End Sub
 
-    ' --- TO-DO: Fix search suggestion functionality ---
-    'Private Sub billingName_TextUpdate(sender As Object, e As EventArgs) Handles billingName.TextUpdate
-    '    Dim dv As DataView = cust_DataTable.DefaultView
-    '    dv.RowFilter = String.Format("Cust_BillName Like '%{0}%'", billingName.Text)
-    '    billingName.DataSource = dv
-    'End Sub
+    Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted
+        ' Query the database to get the corresponding address and set it to the address field.
+        Dim selectedBillingName As String = billingName.SelectedValue.ToString()
+        Dim dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Cust_BillAddress FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
+        billingAddress.Text = If(dataTable.Rows.Count = 1, dataTable.Rows(0)("Cust_BillAddress").ToString(), "")
+        
+        ' Removes highlighting from text after field update
+        Me.BeginInvoke(New Action(Sub() billingName.SelectionLength = 0))
+    End Sub
+
+    Private Sub decisionDate_ValueChanged(sender As Object, e As EventArgs) Handles decisionDate.ValueChanged
+        ' Allow status change when decision date is set
+        status.Enabled = decisionDate.Checked
+
+        ' Validate decision date
+        If decisionDate.Value.Date < DateWritten.Value.Date OrElse decisionDate.Value.Date > DateTime.Now.Date Then
+            MessageBox.Show("Decision date invalid." & vbCrLf & vbCrLf & "Choose a date between the creation date and today.", "Invalid Date", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            decisionDate.Value = DateTime.Now.Date
+        End If
+    End Sub
+
 End Class
