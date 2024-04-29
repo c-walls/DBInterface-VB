@@ -25,6 +25,7 @@ Public Class ProposalPage
     Private WithEvents decisionDate As New DateTimePicker() With {.ShowCheckBox = True, .Checked = False, .Format = DateTimePickerFormat.Short}
     Private decisionDateLabel As New Label() With {.Text = "Decision Date:"}
     Private WithEvents tasksDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
+    Private Tasks_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Task", .Name = "Task"} 
     Private subTotalLabel As New Label() With {.Text = "Total Before Tax:", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
     Private calc_subTotal As New Label() With {.Text = "$0.00", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
     Private taxLabel As New Label() With {.Text = "Tax (8.2%):", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
@@ -123,10 +124,12 @@ Public Class ProposalPage
         tasksDG.Columns.Add("SquareFeet", "Square Feet")
         tasksDG.Columns.Add("PricePerSqFt", "Price/SqFt")
         tasksDG.Columns.Add("Amount", "Amount")
+        tasksDG.Columns.Insert(0, Tasks_DGColumn)
         tasksDG.Columns(2).DefaultCellStyle.Format = "C2"
         tasksDG.Columns(3).DefaultCellStyle.Format = "C2"
         tasksDG.Columns(3).ReadOnly = True
         tasksDG.Rows.Add(3)
+
 
         ' Format main controls
         For Each control As Control In mainFields
@@ -156,6 +159,7 @@ Public Class ProposalPage
     Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         PopulateCustomerList()
         PopulateSalespersonList()
+        PopulateTasksList()
         salesperson.SelectedItem = ""
         Status.SelectedIndex = 0
         locations.Value = 1
@@ -189,6 +193,20 @@ Public Class ProposalPage
         salesperson.DataSource = dataTable
         salesperson.DisplayMember = "Emp_Name"
         salesperson.ValueMember = "Emp_Name"
+    End Sub
+
+    Private Sub PopulateTasksList()
+        Dim dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Task_Name FROM Tasks")
+
+        ' Set the data source of the DataGridViewComboBoxColumn.
+        Tasks_DGColumn.DataSource = dataTable
+        Tasks_DGColumn.DisplayMember = "Task_Name"
+        Tasks_DGColumn.ValueMember = "Task_Name"
+    End Sub
+    
+    Private Sub SaveProposal()
+        ' TO-DO: Add INSERT statement for Proposals
+        ' TO-DO: Add INSERT statement for ProposalTasks
     End Sub
 
     Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted

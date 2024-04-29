@@ -6,14 +6,14 @@ Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
 ' 1. Proposal Form --> Fix styling of table's 3rd column
-' 3. Proposal Form --> Add buttons (combined save / update & Close?Cancel?Confirm?)
-' 4. Proposal Form --> Setup INSERT statements
-' 5. Database --> Add new INSERT statements and auto-increments / triggers as needed
-' 6. Create Homepage / Menu
-' 7. Finish Work Order Form
-' 8. Create Work Assignment Form
-' 9. Create Invoice Form
-' 10. Update Styling and Test (Themes?)
+' 2. Proposal Form --> Add buttons (combined save / update & Close?Cancel?Confirm?)
+' 3. Proposal Form --> Setup INSERT statements
+' 4. Database --> Add new INSERT statements and auto-increments / triggers as needed
+' 5. Create Homepage / Menu
+' 6. Finish Work Order Form
+' 7. Create Work Assignment Form
+' 8. Create Invoice Form
+' 9. Update Styling and Test (Themes?)
 
 Public Class MainForm
     Inherits Form
