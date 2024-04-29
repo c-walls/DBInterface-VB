@@ -5,11 +5,10 @@ Imports System.Windows.Forms
 Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
-' 1. Proposal Form --> Figure out Proposal task table
-' 2. Proposal Form --> make subtotal calculate automatically
+' 1. Proposal Form --> Fix styling of table's 3rd column
 ' 3. Proposal Form --> Add buttons (combined save / update & Close?Cancel?Confirm?)
-' 4. Database --> Add new INSERT statements and constraint for remaining tables
-' 5. Database --> Add auto-increment and triggers as needed
+' 4. Proposal Form --> Setup INSERT statements
+' 5. Database --> Add new INSERT statements and auto-increments / triggers as needed
 ' 6. Create Homepage / Menu
 ' 7. Finish Work Order Form
 ' 8. Create Work Assignment Form

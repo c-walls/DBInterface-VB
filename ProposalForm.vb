@@ -123,6 +123,9 @@ Public Class ProposalPage
         tasksDG.Columns.Add("SquareFeet", "Square Feet")
         tasksDG.Columns.Add("PricePerSqFt", "Price/SqFt")
         tasksDG.Columns.Add("Amount", "Amount")
+        tasksDG.Columns(2).DefaultCellStyle.Format = "C2"
+        tasksDG.Columns(3).DefaultCellStyle.Format = "C2"
+        tasksDG.Columns(3).ReadOnly = True
         tasksDG.Rows.Add(3)
 
         ' Format main controls
@@ -147,8 +150,7 @@ Public Class ProposalPage
         AddHandler Me.Load, AddressOf UserControl_Load
         AddHandler billingName.SelectionChangeCommitted, AddressOf billingName_SelectionChangeCommitted
         AddHandler decisionDate.ValueChanged, AddressOf decisionDate_ValueChanged
-        AddHandler tasksDG.CellValidating, AddressOf tasksDG_CellValidating
-        AddHandler tasksDG.CellValueChanged, AddressOf tasksDG_CellValueChanged
+        AddHandler tasksDG.CellEndEdit, AddressOf tasksDG_CellEndEdit
     End Sub
 
     Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -202,8 +204,11 @@ Public Class ProposalPage
     End Sub
 
     Private Sub decisionDate_ValueChanged(sender As Object, e As EventArgs) Handles decisionDate.ValueChanged
-        ' Allow status change when decision date is set
+        ' Allow status change only when decision date is set
         status.Enabled = decisionDate.Checked
+        If Not decisionDate.Checked Then
+            status.SelectedIndex = 0
+        End If
 
         ' Validate decision date
         If decisionDate.Value.Date < DateWritten.Value.Date OrElse decisionDate.Value.Date > DateTime.Now.Date Then
@@ -212,25 +217,32 @@ Public Class ProposalPage
         End If
     End Sub
 
-    Private Sub tasksDG_CellValidating(sender As Object, e As DataGridViewCellValidatingEventArgs) Handles tasksDG.CellValidating
-        ' Check if the current column is the 4th column
-        If e.ColumnIndex = 3 Then
-            Dim newDecimal As Decimal
-
-            ' Check if the input is a valid decimal
-            If Not Decimal.TryParse(e.FormattedValue.ToString(), newDecimal) Then
-                e.Cancel = True
-                MessageBox.Show("The 'Amount' column only allows decimal numbers.")
+    Private Sub tasksDG_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs)
+        If e.ColumnIndex = 1 Or e.ColumnIndex = 2 Then
+            Dim row = tasksDG.Rows(e.RowIndex)
+            Dim value1 As Integer
+            Dim value2 As Decimal
+            ' if column 2 is not an integer, clear the cell
+            If e.ColumnIndex = 1 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Not Integer.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value1) Then
+                row.Cells(e.ColumnIndex).Value = Nothing
+            ' If column 3 is not a decimal, clear the cell
+            ElseIf e.ColumnIndex = 2 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Not Decimal.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value2) Then
+                row.Cells(e.ColumnIndex).Value = Nothing
+            ' Else both columns validate, update the 4th column (or clear it if not)
+            ElseIf row.Cells(1).Value IsNot Nothing AndAlso Integer.TryParse(row.Cells(1).Value.ToString(), value1) AndAlso row.Cells(2).Value IsNot Nothing AndAlso Decimal.TryParse(row.Cells(2).Value.ToString(), value2) Then
+                value2 = Math.Round(value2, 2)
+                row.Cells(3).Value = value1 * value2
+            Else
+                row.Cells(3).Value = Nothing
             End If
-        End If
-    End Sub
 
-    Private Sub tasksDG_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles tasksDG.CellValueChanged
-        If e.ColumnIndex = 3 Then ' Check if the changed cell is in the 4th column
+            'Calculate the subtotal
             Dim subtotal As Decimal = tasksDG.Rows.Cast(Of DataGridViewRow)().
-                Where(Function(row) Not row.IsNewRow).
-                Sum(Function(row) Convert.ToDecimal(row.Cells(3).Value))
-            subTotalLabel.Text = subtotal.ToString("F2")
+                Where(Function(r) Not r.IsNewRow).
+                Sum(Function(r) Convert.ToDecimal(r.Cells(3).Value))
+            calc_subTotal.Text = subtotal.ToString("C2")
+            calc_Tax.Text = (subtotal * 0.082).ToString("C2")
+            calc_total.Text = (subtotal * 1.082).ToString("C2")
         End If
     End Sub
 
