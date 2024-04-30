@@ -236,7 +236,7 @@ Public Class ProposalPage
         End If
 
         ' Get the next proposal number
-        Dim Prop_No As String = "C" + DBHandler.ExecuteValueQuery("SELECT proposal_seq.NEXTVAL FROM dual").ToString().PadLeft(5, "0"c)
+        Dim Prop_No As String = "P" + (DBHandler.ExecuteValueQuery("SELECT NVL(MAX(TO_NUMBER(SUBSTR(Proposal_No, 2))), 0) FROM Proposals") + 1).ToString().PadLeft(5, "0"c)
 
         ' INSERT Proposals Record
         Dim fields As String = "Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status" & If(String.IsNullOrEmpty(Decision_Date), "", ", Decision_Date")
@@ -254,21 +254,29 @@ Public Class ProposalPage
         ' Iterate over the rows of the DataGridView
         For Each row As DataGridViewRow In tasksDG.Rows
             If Not row.IsNewRow Then
-                ' Get the values from the cells of the row
-                Dim Task As String = row.Cells("Task").Value.ToString()
-                Dim Task_SQFT As String = row.Cells("SquareFeet").Value.ToString()
-                Dim Task_SQFTPrice As Decimal = Decimal.Parse(row.Cells("PricePerSqFt").Value.ToString())
-                Dim Task_ID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Name = '{Task}'").ToString()
+                ' Check if the cells are not null before getting their values
+                If row.Cells("Task").Value IsNot Nothing And row.Cells("SquareFeet").Value IsNot Nothing And row.Cells("PricePerSqFt").Value IsNot Nothing Then
+                    ' Get the values from the cells of the row
+                    Dim Task As String = row.Cells("Task").Value.ToString()
+                    Dim Task_SQFT As String = row.Cells("SquareFeet").Value.ToString()
+                    Dim Task_SQFTPrice As Decimal = Decimal.Parse(row.Cells("PricePerSqFt").Value.ToString())
         
-                ' Construct the INSERT statement
-                Dim Task_Insert As String = $"INSERT INTO taskRequests (Prop_No, Task_ID, Task_SQFT, Task_SQFTPrice) VALUES ('{Prop_No}', '{Task_ID}', {Task_SQFT}, {Task_SQFTPrice})"
+                    ' Execute the SELECT statement and check if the result is not null
+                    Dim Task_ID_Object As Object = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Name = '{Task}'")
+                    If Task_ID_Object IsNot Nothing Then
+                        Dim Task_ID As String = Task_ID_Object.ToString()
         
-                ' Execute the INSERT statement
-                Dim Task_rowsAffected As Integer = DBHandler.ExecuteStatement(Task_Insert)
+                        ' Construct the INSERT statement
+                        Dim Task_Insert As String = $"INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice) VALUES ('{Prop_No}', '{Task_ID}', {Task_SQFT}, {Task_SQFTPrice})"
         
-                ' Check if the task was inserted successfully
-                If Task_rowsAffected <= 0 Then
-                    MessageBox.Show($"Task insertion failed for Task_ID {Task_ID}.")
+                        ' Execute the INSERT statement
+                        Dim Task_rowsAffected As Integer = DBHandler.ExecuteStatement(Task_Insert)
+        
+                        ' Check if the task was inserted successfully
+                        If Task_rowsAffected <= 0 Then
+                            MessageBox.Show($"Task insertion failed for Task: {Task}.")
+                        End If
+                    End If
                 End If
             End If
         Next
