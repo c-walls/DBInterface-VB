@@ -146,9 +146,9 @@ Public Class ProposalPage
             label.TextAlign = ContentAlignment.MiddleRight
         Next
 
-        status.Items.AddRange(New String() {" Pending", " Accepted", " Rejected"})
+        status.Items.AddRange(New String() {"Pending", "Accepted", "Rejected"})
         status.Enabled = decisionDate.Checked
-        estimationMethod.Items.AddRange(New String() {" Walk Through", " Floor Plan"})
+        estimationMethod.Items.AddRange(New String() {"Walk Through", "Floor Plan"})
         tasksDG.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         tasksDG.Dock = DockStyle.Fill
         
@@ -158,6 +158,8 @@ Public Class ProposalPage
         AddHandler decisionDate.ValueChanged, AddressOf decisionDate_ValueChanged
         AddHandler tasksDG.CellEndEdit, AddressOf tasksDG_CellEndEdit
         AddHandler BillingName.KeyDown, AddressOf billingName_KeyDown
+        AddHandler saveButton.Click, AddressOf SaveButton_Click
+        AddHandler cancelButton.Click, AddressOf CancelButton_Click
     End Sub
 
     Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -209,16 +211,17 @@ Public Class ProposalPage
     End Sub
     
     Private Sub SaveProposal()
-        Dim Cust_No As String = customerNo.Text
+        Dim Cust_No As String = String.Empty
         Dim Location_QTY As Integer = Integer.Parse(locations.Text)
-        Dim Est_Method As String = estimationMethod.SelectedValue.ToString()
-        Dim Salesperson_ID As String = salesperson.SelectedValue.ToString()
+        Dim Est_Method As String = estimationMethod.SelectedItem.ToString()
+        Dim Salesperson_Name As String = salesperson.SelectedValue.ToString()
+        Dim Salesperson_ID As String = DBHandler.ExecuteValueQuery($"SELECT Emp_ID FROM Employees WHERE Emp_Name = '{Salesperson_Name}'").ToString()
         Dim Prop_Date As Date = DateTime.Parse(dateWritten.Text)
         Dim Prop_Status As String = status.Text
-        Dim Decision_Date As String = decisionDate.Text
+        Dim Decision_Date As String = DateTime.Parse(decisionDate.Text)
         Dim Customer_Type As String = If(customerType1.Checked, "General Contractor", If(customerType2.Checked, "Commercial", If(customerType3.Checked, "Government", "Residential")))
 
-        IF String.IsNullOrEmpty(Cust_No) Then
+        IF String.IsNullOrEmpty(billingName.Text) Then
         ' Insert a new customer record
             Dim Cust_Insert As String = $"INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type) VALUES ('{billingName.Text}', '{billingAddress.Text}', '{Customer_Type}')"
             Dim Cust_rowsAffected As Integer = DBHandler.ExecuteStatement(Cust_Insert)
@@ -226,13 +229,14 @@ Public Class ProposalPage
                 Cust_No = DBHandler.ExecuteValueQuery($"SELECT Cust_No FROM Customers WHERE Cust_BillName = '{billingName.Text}'").ToString()
                 customerNo.Text = Cust_No
             Else
-                MessageBox.Show("Customer insertion failed.")
-                Return
+                MessageBox.Show("New customer could not be added.")
             End If
+        Else
+            Cust_No = customerNo.Text
         End If
 
         ' Get the next proposal number
-        Dim Prop_No As String = DBHandler.ExecuteValueQuery("SELECT prop_seq.NEXTVAL FROM dual").ToString()
+        Dim Prop_No As String = "C" + DBHandler.ExecuteValueQuery("SELECT proposal_seq.NEXTVAL FROM dual").ToString().PadLeft(5, "0"c)
 
         ' INSERT Proposals Record
         Dim fields As String = "Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status" & If(String.IsNullOrEmpty(Decision_Date), "", ", Decision_Date")
@@ -247,27 +251,27 @@ Public Class ProposalPage
             MessageBox.Show("Proposal insertion failed.")
         End If
 
-        ' Iterate over the rows of the DataGridView
-        For Each row As DataGridViewRow In tasksDG.Rows
-            If Not row.IsNewRow Then
-                ' Get the values from the cells of the row
-                Dim Task As String = row.Cells("Task").Value.ToString()
-                Dim Task_SQFT As String = row.Cells("SquareFeet").Value.ToString()
-                Dim Task_SQFTPrice As Decimal = Decimal.Parse(row.Cells("PricePerSqFt").Value.ToString())
-                Dim Task_ID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Name = '{Task}'").ToString()
+        ' ' Iterate over the rows of the DataGridView
+        ' For Each row As DataGridViewRow In tasksDG.Rows
+        '     If Not row.IsNewRow Then
+        '         ' Get the values from the cells of the row
+        '         Dim Task As String = row.Cells("Task").Value.ToString()
+        '         Dim Task_SQFT As String = row.Cells("SquareFeet").Value.ToString()
+        '         Dim Task_SQFTPrice As Decimal = Decimal.Parse(row.Cells("PricePerSqFt").Value.ToString())
+        '         Dim Task_ID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Name = '{Task}'").ToString()
         
-                ' Construct the INSERT statement
-                Dim Task_Insert As String = $"INSERT INTO taskRequests (Prop_No, Task_ID, Task_SQFT, Task_SQFTPrice) VALUES ('{Prop_No}', '{Task_ID}', {Task_SQFT}, {Task_SQFTPrice})"
+        '         ' Construct the INSERT statement
+        '         Dim Task_Insert As String = $"INSERT INTO taskRequests (Prop_No, Task_ID, Task_SQFT, Task_SQFTPrice) VALUES ('{Prop_No}', '{Task_ID}', {Task_SQFT}, {Task_SQFTPrice})"
         
-                ' Execute the INSERT statement
-                Dim Task_rowsAffected As Integer = DBHandler.ExecuteStatement(Task_Insert)
+        '         ' Execute the INSERT statement
+        '         Dim Task_rowsAffected As Integer = DBHandler.ExecuteStatement(Task_Insert)
         
-                ' Check if the task was inserted successfully
-                If Task_rowsAffected <= 0 Then
-                    MessageBox.Show($"Task insertion failed for Task_ID {Task_ID}.")
-                End If
-            End If
-        Next
+        '         ' Check if the task was inserted successfully
+        '         If Task_rowsAffected <= 0 Then
+        '             MessageBox.Show($"Task insertion failed for Task_ID {Task_ID}.")
+        '         End If
+        '     End If
+        ' Next
     End Sub
 
     Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted
@@ -331,6 +335,21 @@ Public Class ProposalPage
             calc_Tax.Text = (subtotal * 0.082).ToString("C2")
             calc_total.Text = (subtotal * 1.082).ToString("C2")
         End If
+    End Sub
+
+    Private Sub SaveButton_Click(sender As Object, e As EventArgs)
+        SaveProposal()
+    End Sub
+
+    Private Sub CancelButton_Click(sender As Object, e As EventArgs)
+        ' Remove the current user control
+        Me.Parent.Controls.Remove(Me)
+    
+        ' Display the main menu user control
+        'Dim mainMenu As New MainMenuUserControl()
+        'mainMenu.Dock = DockStyle.Fill
+        'Me.Parent.Controls.Add(mainMenu)
+        'mainMenu.BringToFront()
     End Sub
 
 End Class
