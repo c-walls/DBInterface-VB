@@ -6,7 +6,7 @@ Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
 ' 1. Proposal Form --> Add Column before customer name with gap and label (Also "New Customer Toggle")
-' 2. Proposal Form --> Test INSERT statements
+' 2. Proposal Form --> Fix other INSERT statements
 ' 3. Database --> Add new INSERT statements and auto-increments / triggers as needed
 ' 4. Create Homepage / Menu
 ' 5. Finish Work Order Form

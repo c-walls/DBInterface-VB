@@ -251,27 +251,27 @@ Public Class ProposalPage
             MessageBox.Show("Proposal insertion failed.")
         End If
 
-        ' ' Iterate over the rows of the DataGridView
-        ' For Each row As DataGridViewRow In tasksDG.Rows
-        '     If Not row.IsNewRow Then
-        '         ' Get the values from the cells of the row
-        '         Dim Task As String = row.Cells("Task").Value.ToString()
-        '         Dim Task_SQFT As String = row.Cells("SquareFeet").Value.ToString()
-        '         Dim Task_SQFTPrice As Decimal = Decimal.Parse(row.Cells("PricePerSqFt").Value.ToString())
-        '         Dim Task_ID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Name = '{Task}'").ToString()
+        ' Iterate over the rows of the DataGridView
+        For Each row As DataGridViewRow In tasksDG.Rows
+            If Not row.IsNewRow Then
+                ' Get the values from the cells of the row
+                Dim Task As String = row.Cells("Task").Value.ToString()
+                Dim Task_SQFT As String = row.Cells("SquareFeet").Value.ToString()
+                Dim Task_SQFTPrice As Decimal = Decimal.Parse(row.Cells("PricePerSqFt").Value.ToString())
+                Dim Task_ID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Name = '{Task}'").ToString()
         
-        '         ' Construct the INSERT statement
-        '         Dim Task_Insert As String = $"INSERT INTO taskRequests (Prop_No, Task_ID, Task_SQFT, Task_SQFTPrice) VALUES ('{Prop_No}', '{Task_ID}', {Task_SQFT}, {Task_SQFTPrice})"
+                ' Construct the INSERT statement
+                Dim Task_Insert As String = $"INSERT INTO taskRequests (Prop_No, Task_ID, Task_SQFT, Task_SQFTPrice) VALUES ('{Prop_No}', '{Task_ID}', {Task_SQFT}, {Task_SQFTPrice})"
         
-        '         ' Execute the INSERT statement
-        '         Dim Task_rowsAffected As Integer = DBHandler.ExecuteStatement(Task_Insert)
+                ' Execute the INSERT statement
+                Dim Task_rowsAffected As Integer = DBHandler.ExecuteStatement(Task_Insert)
         
-        '         ' Check if the task was inserted successfully
-        '         If Task_rowsAffected <= 0 Then
-        '             MessageBox.Show($"Task insertion failed for Task_ID {Task_ID}.")
-        '         End If
-        '     End If
-        ' Next
+                ' Check if the task was inserted successfully
+                If Task_rowsAffected <= 0 Then
+                    MessageBox.Show($"Task insertion failed for Task_ID {Task_ID}.")
+                End If
+            End If
+        Next
     End Sub
 
     Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted
