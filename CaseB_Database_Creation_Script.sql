@@ -10,6 +10,8 @@ DROP TABLE Tasks;
 DROP TABLE Proposals;
 DROP TABLE Customers;
 DROP TABLE Employees;
+DROP SEQUENCE customer_seq;
+DROP SEQUENCE proposal_seq;
 
 
 CREATE TABLE Employees (
@@ -22,7 +24,7 @@ CONSTRAINT ChkRole CHECK (Emp_Role IN ('Project Manager', 'Salesperson', 'Crew S
 
 
 CREATE TABLE Customers (
-    Cust_No CHAR(4),
+    Cust_No CHAR(6),
     Cust_BillName VARCHAR(50) CONSTRAINT Cust_BillName_Required NOT NULL,
     Cust_BillAddress VARCHAR(100) CONSTRAINT Cust_BillAddress_Required NOT NULL,
     Cust_Type VARCHAR(20) CONSTRAINT Cust_Type_Required NOT NULL,
@@ -32,10 +34,19 @@ CONSTRAINT ChkCust_Type CHECK (Cust_Type IN ('General Contractor', 'Commercial',
 CONSTRAINT ChkBillCycle CHECK (BillCycle_Date BETWEEN 1 AND 30)
 );
 
+CREATE SEQUENCE customer_seq START WITH 1 INCREMENT BY 1;
+CREATE OR REPLACE TRIGGER customer_auto_increment
+BEFORE INSERT ON Customers
+FOR EACH ROW
+BEGIN
+    SELECT 'C' || TO_CHAR(customer_seq.NEXTVAL, 'FM00000') INTO :new.Cust_No FROM dual;
+END;
+/
+
 
 CREATE TABLE Proposals (
-    Proposal_No CHAR(4),
-    Cust_No CHAR(4) CONSTRAINT PropCust_Required NOT NULL,
+    Proposal_No CHAR(6),
+    Cust_No CHAR(6) CONSTRAINT PropCust_Required NOT NULL,
     Location_QTY INTEGER CONSTRAINT Location_Qty_Required NOT NULL,
     Est_Method VARCHAR(15) CONSTRAINT Est_Method_Required NOT NULL,
     Salesperson_ID CHAR(4) CONSTRAINT Salesperson_Required NOT NULL,
@@ -50,6 +61,15 @@ CONSTRAINT ChkEstMethod CHECK (Est_Method IN ('Walk Through', 'Floor Plan')),
 CONSTRAINT ChkPropStatus CHECK (Prop_Status IN ('Pending', 'Accepted', 'Denied'))
 );
 
+CREATE SEQUENCE proposal_seq START WITH 1 INCREMENT BY 1;
+CREATE OR REPLACE TRIGGER proposal_auto_increment
+BEFORE INSERT ON Proposals 
+FOR EACH ROW
+BEGIN
+    SELECT 'P' || TO_CHAR(proposal_seq.NEXTVAL, 'FM00000') INTO :new.Proposal_No FROM dual;
+END;
+/
+
 
 CREATE TABLE Tasks (
     Task_ID CHAR(4),
@@ -60,7 +80,7 @@ CONSTRAINT PKTask PRIMARY KEY (Task_ID)
 
 CREATE TABLE TaskRequests (
     Task_ID CHAR(4),
-    Proposal_No CHAR(4),
+    Proposal_No CHAR(6),
     Total_SQFT INTEGER CONSTRAINT Total_SQFT_Required NOT NULL,
     Quoted_SQFTPrice DECIMAL(5,2) CONSTRAINT Quoted_SQFTPrice_Required NOT NULL,
 CONSTRAINT PKTaskRequest PRIMARY KEY (Proposal_No, Task_ID),
@@ -73,7 +93,7 @@ CONSTRAINT PosQuoted_SQFTPrice CHECK (Quoted_SQFTPrice > 0)
 
 CREATE TABLE WorkOrders (
     Order_No CHAR(4),
-    Proposal_No CHAR(4) CONSTRAINT OrderProp_Required NOT NULL,
+    Proposal_No CHAR(6) CONSTRAINT OrderProp_Required NOT NULL,
     Location_Name VARCHAR(50) CONSTRAINT LocName_Required NOT NULL,
     Location_Address VARCHAR(100) CONSTRAINT LocAddress_Required NOT NULL,
     Generated_Date DATE DEFAULT SYSDATE,
@@ -123,7 +143,7 @@ CONSTRAINT PosVehicle CHECK (Vehicle_No >= 0)
 
 CREATE TABLE Invoices (
     Invoice_No CHAR(4),
-    Proposal_No CHAR(4) CONSTRAINT InvoiceProp_Required NOT NULL,
+    Proposal_No CHAR(6) CONSTRAINT InvoiceProp_Required NOT NULL,
     Invoice_Date DATE DEFAULT SYSDATE,
     Invoice_Total DECIMAL(10, 2) CONSTRAINT InvoiceTotal_Required NOT NULL,
 CONSTRAINT PKInvoice PRIMARY KEY (Invoice_No),
@@ -179,35 +199,35 @@ CONSTRAINT ChkPay_Type CHECK (Pay_Type IN ('Hourly', 'Per Piece', 'Contract'))
 
 
 -- INSERT CUSTOMER DATA --
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date) 
-VALUES ('C001', 'Acme Construction Inc.', '123 Main St, Anytown, CA 12345', 'General Contractor', 1);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date) 
+VALUES ('Acme Construction Inc.', '123 Main St, Anytown, CA 12345', 'General Contractor', 1);
 
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('C002', 'Smith Residential Builders', '456 Oak Rd, Sometown, NY 67890', 'General Contractor', 15);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
+VALUES ('Smith Residential Builders', '456 Oak Rd, Sometown, NY 67890', 'General Contractor', 15);
 
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('C003', 'Oakland Transit Authority', '789 Capitol Ave, Washington, DC 20001', 'Government', 1);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
+VALUES ('Oakland Transit Authority', '789 Capitol Ave, Washington, DC 20001', 'Government', 1);
 
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('C004', 'Justin Hershowitz', '321 Elm Ln, Mytown, TX 54321', 'Residential', 5);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
+VALUES ('Justin Hershowitz', '321 Elm Ln, Mytown, TX 54321', 'Residential', 5);
 
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('C005', 'Cerberus Industrial Solutions LLC', '159 Tower Blvd, Bigcity, CA 90210', 'Commercial', 13);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
+VALUES ('Cerberus Industrial Solutions LLC', '159 Tower Blvd, Bigcity, CA 90210', 'Commercial', 13);
 
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('C006', 'Tiffany Chesterton', '789 Maple Ave, Suburbville, IL 60610', 'Residential', 15);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
+VALUES ('Tiffany Chesterton', '789 Maple Ave, Suburbville, IL 60610', 'Residential', 15);
 
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('C007', 'Green Valley Contractors', '456 Pine St, Greenville, OR 97330', 'General Contractor', 1);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
+VALUES ('Green Valley Contractors', '456 Pine St, Greenville, OR 97330', 'General Contractor', 1);
 
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('C008', 'Southeastern University', '123 College Rd, Unitown, MA 02155', 'Government', 1);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
+VALUES ('Southeastern University', '123 College Rd, Unitown, MA 02155', 'Government', 1);
 
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('C009', 'Rick Anderson', '987 Valley Dr, Hilltown, CO 80501', 'Residential', 3);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
+VALUES ('Rick Anderson', '987 Valley Dr, Hilltown, CO 80501', 'Residential', 3);
 
-INSERT INTO Customers (Cust_No, Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('C010', 'Apex Developers LLC', '654 City Center Blvd, Metro, NY 10001', 'General Contractor', 25);
+INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
+VALUES ('Apex Developers LLC', '654 City Center Blvd, Metro, NY 10001', 'General Contractor', 25);
 
 
 -- INSERT EMPLOYEE DATA --
@@ -280,34 +300,34 @@ VALUES ('T002', 'Ceiling Insulation');
 
 
 -- INSERT PROPOSAL DATA --
-INSERT INTO Proposals (Proposal_No, Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status)
-VALUES ('P001', 'C001', 2, 'Floor Plan', 'E004', TO_DATE('2024-04-20', 'YYYY-MM-DD'), 'Pending');
+INSERT INTO Proposals (Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status)
+VALUES ('C00001', 2, 'Floor Plan', 'E004', TO_DATE('2024-04-20', 'YYYY-MM-DD'), 'Pending');
 
-INSERT INTO Proposals (Proposal_No, Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status, Decision_Date)
-VALUES ('P002', 'C002', 1, 'Floor Plan', 'E003', TO_DATE('2024-04-18', 'YYYY-MM-DD'), 'Accepted', TO_DATE('2024-04-25', 'YYYY-MM-DD'));
+INSERT INTO Proposals (Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status, Decision_Date)
+VALUES ('C00002', 1, 'Floor Plan', 'E003', TO_DATE('2024-04-18', 'YYYY-MM-DD'), 'Accepted', TO_DATE('2024-04-25', 'YYYY-MM-DD'));
 
-INSERT INTO Proposals (Proposal_No, Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status, Decision_Date)
-VALUES ('P003', 'C003', 3, 'Floor Plan', 'E004', TO_DATE('2024-04-10', 'YYYY-MM-DD'), 'Denied', TO_DATE('2024-04-25', 'YYYY-MM-DD'));
+INSERT INTO Proposals (Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status, Decision_Date)
+VALUES ('C00003', 3, 'Floor Plan', 'E004', TO_DATE('2024-04-10', 'YYYY-MM-DD'), 'Denied', TO_DATE('2024-04-25', 'YYYY-MM-DD'));
 
 
 -- INSERT PROPOSED TASK DATA --
 INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
-VALUES ('P001', 'T001', 500, 2.50);
+VALUES ('P00001', 'T001', 500, 2.50);
 
 INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
-VALUES ('P001', 'T002', 300, 2.00);
+VALUES ('P00001', 'T002', 300, 2.00);
 
 INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
-VALUES ('P002', 'T001', 250, 2.50);
+VALUES ('P00002', 'T001', 250, 2.50);
 
 INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
-VALUES ('P002', 'T002', 150, 2.00);
+VALUES ('P00002', 'T002', 150, 2.00);
 
 INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
-VALUES ('P003', 'T001', 750, 2.50);
+VALUES ('P00003', 'T001', 750, 2.50);
 
 INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
-VALUES ('P003', 'T002', 450, 2.00);
+VALUES ('P00003', 'T002', 450, 2.00);
 
 -- INSERT WORK ORDER DATA --
 --INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)

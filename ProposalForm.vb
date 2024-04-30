@@ -14,7 +14,7 @@ Public Class ProposalPage
     Private estimationMethodLabel As New Label() With {.Text = "Estimation Method:"}
     Private WithEvents billingName As New ComboBox()
     Private billingNameLabel As New Label() With {.Text = "Customer Name:"}
-    Private billingAddress As New TextBox() With {.ReadOnly = True, .Multiline = True, .Height = billingName.Height * 2}
+    Private billingAddress As New TextBox() With {.ReadOnly = True, .Multiline = True, .Height = billingName.Height * 2.5}
     Private billingAddressLabel As New Label() With {.Text = "Billing Address:"}
     Private locations As New NumericUpDown() With {.Minimum = 1, .Maximum = 20}
     Private locationsLabel As New Label() With {.Text = "Locations:"}
@@ -66,12 +66,12 @@ Public Class ProposalPage
         tableLayoutPanel.RowCount = 17
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.25))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 15))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 1.5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 1.5))
@@ -168,7 +168,7 @@ Public Class ProposalPage
     End Sub
 
     Private Sub PopulateCustomerList()
-        cust_DataTable = DBHandler.ExecuteQuery("SELECT Cust_BillName FROM Customers")
+        cust_DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_BillName FROM Customers")
         
         ' Insert an empty row at the beginning of the cust_DataTable.
         Dim row As DataRow = cust_DataTable.NewRow()
@@ -183,7 +183,7 @@ Public Class ProposalPage
     End Sub
 
     Private Sub PopulateSalespersonList()
-        Dim dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Emp_Name FROM Employees WHERE Emp_Role = 'Salesperson'")
+        Dim dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Emp_Name FROM Employees WHERE Emp_Role = 'Salesperson'")
         
         ' Insert an empty row at the beginning of the DataTable.
         Dim row As DataRow = dataTable.NewRow()
@@ -196,7 +196,7 @@ Public Class ProposalPage
     End Sub
 
     Private Sub PopulateTasksList()
-        Dim dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Task_Name FROM Tasks")
+        Dim dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Task_Name FROM Tasks")
 
         ' Set the data source of the DataGridViewComboBoxColumn.
         Tasks_DGColumn.DataSource = dataTable
@@ -205,16 +205,73 @@ Public Class ProposalPage
     End Sub
     
     Private Sub SaveProposal()
-        ' TO-DO: Add INSERT statement for Proposals
-        ' TO-DO: Add INSERT statement for ProposalTasks
+        Dim Cust_No As String = customerNo.Text
+        Dim Location_QTY As Integer = Integer.Parse(locations.Text)
+        Dim Est_Method As String = estimationMethod.SelectedValue.ToString()
+        Dim Salesperson_ID As String = salesperson.SelectedValue.ToString()
+        Dim Prop_Date As Date = DateTime.Parse(dateWritten.Text)
+        Dim Prop_Status As String = status.Text
+        Dim Decision_Date As String = decisionDate.Text
+        Dim Customer_Type As String = If(customerType1.Checked, "General Contractor", If(customerType2.Checked, "Commercial", If(customerType3.Checked, "Government", "Residential")))
+
+        IF String.IsNullOrEmpty(Cust_No) Then
+        ' Insert a new customer record
+            Dim Cust_Insert As String = $"INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type) VALUES ('{billingName.Text}', '{billingAddress.Text}', '{Customer_Type}')"
+            Dim Cust_rowsAffected As Integer = DBHandler.ExecuteStatement(Cust_Insert)
+            If Cust_rowsAffected > 0 Then
+                Cust_No = DBHandler.ExecuteValueQuery($"SELECT Cust_No FROM Customers WHERE Cust_BillName = '{billingName.Text}'").ToString()
+                customerNo.Text = Cust_No
+            Else
+                MessageBox.Show("Customer insertion failed.")
+                Return
+            End If
+        End If
+
+        ' Get the next proposal number
+        Dim Prop_No As String = DBHandler.ExecuteValueQuery("SELECT prop_seq.NEXTVAL FROM dual").ToString()
+
+        ' INSERT Proposals Record
+        Dim fields As String = "Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status" & If(String.IsNullOrEmpty(Decision_Date), "", ", Decision_Date")
+        Dim values As String = $"'{Cust_No}', {Location_QTY}, '{Est_Method}', '{Salesperson_ID}', TO_DATE('{Prop_Date:yyyy-MM-dd}', 'YYYY-MM-DD'), '{Prop_Status}'" & If(String.IsNullOrEmpty(Decision_Date), "", $", TO_DATE('{DateTime.Parse(Decision_Date):yyyy-MM-dd}', 'YYYY-MM-DD')")
+        Dim Prop_Insert As String = $"INSERT INTO Proposals ({fields}) VALUES ({values})"
+        Dim rowsAffected As Integer = DBHandler.ExecuteStatement(Prop_Insert)
+
+        ' Check if the proposal was inserted successfully
+        If rowsAffected > 0 Then
+            proposalNo.Text = Prop_No
+        Else
+            MessageBox.Show("Proposal insertion failed.")
+        End If
+
+        ' Iterate over the rows of the DataGridView
+        For Each row As DataGridViewRow In tasksDG.Rows
+            If Not row.IsNewRow Then
+                ' Get the values from the cells of the row
+                Dim Task As String = row.Cells("Task").Value.ToString()
+                Dim Task_SQFT As String = row.Cells("SquareFeet").Value.ToString()
+                Dim Task_SQFTPrice As Decimal = Decimal.Parse(row.Cells("PricePerSqFt").Value.ToString())
+                Dim Task_ID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Name = '{Task}'").ToString()
+        
+                ' Construct the INSERT statement
+                Dim Task_Insert As String = $"INSERT INTO taskRequests (Prop_No, Task_ID, Task_SQFT, Task_SQFTPrice) VALUES ('{Prop_No}', '{Task_ID}', {Task_SQFT}, {Task_SQFTPrice})"
+        
+                ' Execute the INSERT statement
+                Dim Task_rowsAffected As Integer = DBHandler.ExecuteStatement(Task_Insert)
+        
+                ' Check if the task was inserted successfully
+                If Task_rowsAffected <= 0 Then
+                    MessageBox.Show($"Task insertion failed for Task_ID {Task_ID}.")
+                End If
+            End If
+        Next
     End Sub
 
     Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted
         ' Query the database to get the corresponding address and set it to the address field.
         Dim selectedBillingName As String = billingName.SelectedValue.ToString()
-        Dim num_dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Cust_No FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
+        Dim num_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_No FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
         customerNo.Text = If(num_dataTable.Rows.Count = 1, num_dataTable.Rows(0)("Cust_No").ToString(), "")
-        Dim addr_dataTable As DataTable = DBHandler.ExecuteQuery("SELECT Cust_BillAddress FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
+        Dim addr_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_BillAddress FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
         billingAddress.Text = If(addr_dataTable.Rows.Count = 1, addr_dataTable.Rows(0)("Cust_BillAddress").ToString(), "")
         
         ' Removes highlighting from text after field update
