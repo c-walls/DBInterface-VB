@@ -39,6 +39,8 @@ Public Class ProposalPage
     Private customerTypeLabel As New Label() With {.Text = "Customer Type:"}
     Private salesperson As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private salespersonLabel As New Label() With {.Text = "Salesperson:"}
+    Private saveButton As New Button() With {.Text = "Create", .Dock = DockStyle.Top, .Margin = New Padding(0, 120, 0, 0), .Height = 40}
+    Private cancelButton As New Button() With {.Text = "Cancel", .Dock = DockStyle.Top, .Margin = New Padding(0, 120, 0, 0), .Height = 40}
 
     Private mainFields As New List(Of Control) From {proposalNo, customerNo, estimationMethod, billingName, billingAddress, dateWritten, status, decisionDate, salesperson, locations}
     Private mainLabels As New List(Of Control) From {proposalNoLabel, customerNoLabel, estimationMethodLabel, billingNameLabel, billingAddressLabel, dateWrittenLabel, statusLabel, decisionDateLabel, customerTypeLabel, salespersonLabel, locationsLabel, subTotalLabel, taxLabel, totalLabel}
@@ -58,10 +60,10 @@ Public Class ProposalPage
         Dim tableLayoutPanel As New TableLayoutPanel()
         tableLayoutPanel.Dock = DockStyle.Fill
         tableLayoutPanel.ColumnCount = 5
-        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20))
-        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20))
-        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 15))
-        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 20))
+        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25))
+        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 18))
+        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 14))
+        tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 18))
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25))
         tableLayoutPanel.RowCount = 17
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
@@ -115,6 +117,8 @@ Public Class ProposalPage
         tableLayoutPanel.Controls.Add(status, 4, 3)
         tableLayoutPanel.Controls.Add(decisionDateLabel, 3, 4)
         tableLayoutPanel.Controls.Add(decisionDate, 4, 4)
+        tableLayoutPanel.Controls.Add(saveButton, 1, 16)
+        tableLayoutPanel.Controls.Add(cancelButton, 3, 16)
 
         ' Configure DataGridView
         tasksDG.Margin = New Padding(200, 40, 200, 10)
