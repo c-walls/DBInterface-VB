@@ -120,11 +120,10 @@ Public Class ProposalPage
         tasksDG.Margin = New Padding(200, 40, 200, 10)
         tableLayoutPanel.SetColumnSpan(tasksDG, 5)
         tableLayoutPanel.Controls.Add(tasksDG, 0, 8)
-        tasksDG.Columns.Add("Task", "Task")
+        tasksDG.Columns.Insert(0, Tasks_DGColumn)
         tasksDG.Columns.Add("SquareFeet", "Square Feet")
         tasksDG.Columns.Add("PricePerSqFt", "Price/SqFt")
         tasksDG.Columns.Add("Amount", "Amount")
-        tasksDG.Columns.Insert(0, Tasks_DGColumn)
         tasksDG.Columns(2).DefaultCellStyle.Format = "C2"
         tasksDG.Columns(3).DefaultCellStyle.Format = "C2"
         tasksDG.Columns(3).ReadOnly = True
@@ -154,6 +153,7 @@ Public Class ProposalPage
         AddHandler billingName.SelectionChangeCommitted, AddressOf billingName_SelectionChangeCommitted
         AddHandler decisionDate.ValueChanged, AddressOf decisionDate_ValueChanged
         AddHandler tasksDG.CellEndEdit, AddressOf tasksDG_CellEndEdit
+        AddHandler BillingName.KeyDown, AddressOf billingName_KeyDown
     End Sub
 
     Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -221,6 +221,12 @@ Public Class ProposalPage
         Me.BeginInvoke(New Action(Sub() billingName.SelectionLength = 0))
     End Sub
 
+    Private Sub billingName_KeyDown(sender As Object, e As KeyEventArgs) Handles billingName.KeyDown
+        If e.KeyCode = Keys.Enter Then
+            billingName_SelectionChangeCommitted(sender, e)
+        End If
+    End Sub
+
     Private Sub decisionDate_ValueChanged(sender As Object, e As EventArgs) Handles decisionDate.ValueChanged
         ' Allow status change only when decision date is set
         status.Enabled = decisionDate.Checked
@@ -244,16 +250,18 @@ Public Class ProposalPage
             If e.ColumnIndex = 1 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Not Integer.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value1) Then
                 row.Cells(e.ColumnIndex).Value = Nothing
             ' If column 3 is not a decimal, clear the cell
-            ElseIf e.ColumnIndex = 2 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Not Decimal.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value2) Then
-                row.Cells(e.ColumnIndex).Value = Nothing
-            ' Else both columns validate, update the 4th column (or clear it if not)
-            ElseIf row.Cells(1).Value IsNot Nothing AndAlso Integer.TryParse(row.Cells(1).Value.ToString(), value1) AndAlso row.Cells(2).Value IsNot Nothing AndAlso Decimal.TryParse(row.Cells(2).Value.ToString(), value2) Then
+            ElseIf e.ColumnIndex = 2 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Decimal.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value2) Then
+                row.Cells(e.ColumnIndex).Value = Math.Round(value2, 2)
+            End If
+    
+            ' If both columns validate, update the 4th column (or clear it if not)
+            If row.Cells(1).Value IsNot Nothing AndAlso Integer.TryParse(row.Cells(1).Value.ToString(), value1) AndAlso row.Cells(2).Value IsNot Nothing AndAlso Decimal.TryParse(row.Cells(2).Value.ToString(), value2) Then
                 value2 = Math.Round(value2, 2)
                 row.Cells(3).Value = value1 * value2
             Else
-                row.Cells(3).Value = Nothing
+                row.Cells(3).Value = 0D
             End If
-
+    
             'Calculate the subtotal
             Dim subtotal As Decimal = tasksDG.Rows.Cast(Of DataGridViewRow)().
                 Where(Function(r) Not r.IsNewRow).

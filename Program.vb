@@ -5,15 +5,14 @@ Imports System.Windows.Forms
 Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
-' 1. Proposal Form --> Fix styling of table's 3rd column
-' 2. Proposal Form --> Add buttons (combined save / update & Close?Cancel?Confirm?)
-' 3. Proposal Form --> Setup INSERT statements
-' 4. Database --> Add new INSERT statements and auto-increments / triggers as needed
-' 5. Create Homepage / Menu
-' 6. Finish Work Order Form
-' 7. Create Work Assignment Form
-' 8. Create Invoice Form
-' 9. Update Styling and Test (Themes?)
+' 1. Proposal Form --> Add buttons (combined save / update & Close?Cancel?Confirm?)
+' 2. Proposal Form --> Setup INSERT statements
+' 3. Database --> Add new INSERT statements and auto-increments / triggers as needed
+' 4. Create Homepage / Menu
+' 5. Finish Work Order Form
+' 6. Create Work Assignment Form
+' 7. Create Invoice Form
+' 8. Update Styling and Test (Themes?)
 
 Public Class MainForm
     Inherits Form
@@ -31,8 +30,7 @@ Public Class MainForm
 End Class
 
 Public Class DBHandler
-    Private Shared connectionString As String = "User Id=ADMIN;Password=StRoNg_password123;Data Source=ovyv9ufieozhf2yr_medium;TNS_ADMIN=C:\\Users\\caleb\\OneDrive\\Documents\\Coding Projects\\Database\\Wallet_OVYV9UFIEOZHF2YR;Pooling=true;"
-
+    Private Shared connectionString As String = System.IO.File.ReadAllText("config.txt")
     Public Shared Function ExecuteQuery(query As String) As DataTable
         Dim dataTable As New DataTable()
         Try
