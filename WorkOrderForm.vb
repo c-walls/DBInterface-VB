@@ -182,28 +182,33 @@ Public Class WorkOrderPage
 
     Private Sub SaveWorkOrder()
         Dim orderNo As String = workOrderNo.Text
-        Dim proposalNo As String = proposalNo.Text
         Dim locationName As String = workLocationName.Text
         Dim locationAddress As String = workLocationAddress.Text
         Dim requiredDate As String = dateRequired.Value.ToString("yyyy-MM-dd")
-        Dim orderNotes As String = If(String.IsNullOrEmpty(orderNotesTextBox.Text), String.Empty, orderNotesTextBox.Text)
-        Dim managerID As String = ExecuteValueQuery($"SELECT Emp_ID FROM Employees WHERE Emp_Name = '{manager.Text}'")
+        Dim orderNotes As String = If(String.IsNullOrEmpty(workOrderNotes.Text), String.Empty, workOrderNotes.Text)
+        Dim managerID As String = DBHandler.ExecuteValueQuery($"SELECT Emp_ID FROM Employees WHERE Emp_Name = '{manager.Text}'")
 
         ' INSERT INTO WorkOrders
-        Dim insertWorkOrderStatement As String = $"INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID) VALUES ('{orderNo}', '{proposalNo}', '{locationName}', '{locationAddress}', '{requiredDate}', '{orderNotes}', '{managerID}')"
+        Dim insertWorkOrderStatement As String = $"INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID) VALUES ('{orderNo}', '{selectedProposal}', '{locationName}', '{locationAddress}', TO_DATE('{requiredDate}', 'YYYY-MM-DD'), '{orderNotes}', '{managerID}')"
         DBHandler.ExecuteStatement(insertWorkOrderStatement)
 
         ' INSERT INTO TaskOrders
         For Each row As DataGridViewRow In taskOrderDG.Rows
-            Dim taskName As String = row.Cells(0).Value.ToString()
-            Dim taskID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Names = '{taskName}'")
-            Dim sqft As Integer = row.Cells(1).Value
-            Dim estHours As Integer = row.Cells(2).Value
-            Dim status As String = "Pending"
-            Dim statement As String = $"INSERT INTO TaskOrders (WorkOrder_No, Task_ID, SquareFeet, EstHours, Status) 
-                                        VALUES ('{workOrderNo.Text}', '{Task_ID}', {sqft}, {estHours}, '{status}')"
-            DBHandler.ExecuteStatement(statement)
+            If row.Cells(0).Value IsNot Nothing AndAlso row.Cells(1).Value IsNot Nothing AndAlso row.Cells(2).Value IsNot Nothing Then
+                Dim taskName As String = row.Cells(0).Value.ToString()
+                Dim taskID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Names = '{taskName}'")
+                Dim sqft As Integer = row.Cells(1).Value
+                Dim estHours As Integer = row.Cells(2).Value
+                Dim status As String = "Pending"
+                row.Cells(3).Value = status
+                Dim statement As String = $"INSERT INTO TaskOrders (Order_No, Task_ID, Task_SQFT, Est_Duration, Task_Status) 
+                                            VALUES ('{workOrderNo.Text}', '{taskID}', {sqft}, {estHours}, '{status}')"
+                DBHandler.ExecuteStatement(statement)
+            End If
         Next
+
+        MessageBox.Show("Work Order created successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        CancelButton_Click(nothing, nothing)
     End Sub
 
     Private Sub SaveButton_Click(sender As Object, e As EventArgs)
