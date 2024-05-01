@@ -127,7 +127,7 @@ CREATE TABLE WorkAssignments (
     Order_No CHAR(9) CONSTRAINT AssignOrder_Required NOT NULL,
     Authorizer_ID CHAR(4) CONSTRAINT Authorizer_Required NOT NULL,
     Authorized_Date DATE DEFAULT SYSDATE,
-    Start_Date DATE,
+    Start_Date DATE CONSTRAINT StartDate_Required NOT NULL,
     Finish_Date DATE,
     Supervisor_ID CHAR(4) CONSTRAINT Supervisor_Required NOT NULL,
     Vehicle_No INTEGER CONSTRAINT Vehicle_Required NOT NULL,
@@ -135,14 +135,12 @@ CONSTRAINT PKWorkAssignments PRIMARY KEY (Assignment_No),
 CONSTRAINT FKWorkOrders_Assign FOREIGN KEY (Order_No) REFERENCES WorkOrders,
 CONSTRAINT FKWorkAssignments_Authorizer FOREIGN KEY (Authorizer_ID) REFERENCES Employees(Emp_ID),
 CONSTRAINT FKWorkAssignments_Supervisor FOREIGN KEY (Supervisor_ID) REFERENCES Employees(Emp_ID),
-CONSTRAINT ValidStartDate CHECK (Start_Date >= Authorized_Date),
-CONSTRAINT ValidFinishDate CHECK (Finish_Date >= Start_Date),
 CONSTRAINT PosVehicle CHECK (Vehicle_No >= 0)
 );
 
 
 CREATE TABLE Invoices (
-    Invoice_No CHAR(4),
+    Invoice_No CHAR(6),
     Proposal_No CHAR(6) CONSTRAINT InvoiceProp_Required NOT NULL,
     Invoice_Date DATE DEFAULT SYSDATE,
     Invoice_Total DECIMAL(10, 2) CONSTRAINT InvoiceTotal_Required NOT NULL,
@@ -427,31 +425,32 @@ VALUES ('T005', 'W00004-01', 450, 9, 'Pending');
 
 
 -- INSERT WORK ASSIGNMENT DATA --
-INSERT INTO WorkAssignments (Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
-VALUES ('W00001-01', 'E001', TO_DATE('2024-04-01', 'YYYY-MM-DD'), TO_DATE('2024-04-05', 'YYYY-MM-DD'), 'E005', 101);
+INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
+VALUES ('A00001', 'W00001-01', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 101);
 
-INSERT INTO WorkAssignments (Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
-VALUES ('W00001-02', 'E001', TO_DATE('2024-04-01', 'YYYY-MM-DD'), TO_DATE('2024-04-05', 'YYYY-MM-DD'), 'E005', 101);
+INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
+VALUES ('A00002', 'W00001-02', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 101);
 
 
 -- INSERT MATERIAL ASSIGNMENT DATA --
 INSERT INTO MaterialAssignments (Task_ID, Assignment_No, Material_ID, Material_Sent, Material_Used)
-VALUES ('T001', 'W00001-01', 'M001', 500, 500);
+VALUES ('T001', 'A00001', 'M001', 500, 500);
 
 INSERT INTO MaterialAssignments (Task_ID, Assignment_No, Material_ID, Material_Sent, Material_Used)
-VALUES ('T004', 'W00001-01', 'M004', 300, 300);
+VALUES ('T004', 'A00001', 'M004', 300, 300);
 
 
 -- INSERT LABOR ASSIGNMENT DATA --
 INSERT INTO LaborAssignments (Assignment_No, Task_ID, Worker, Pay_Rate, Pay_Type, Est_Hours, Used_Hours)
-VALUES ('W00001-01', 'T001', 'E007', 25.00, 'Hourly', 10, 10);
+VALUES ('A00001', 'T001', 'E007', 25.00, 'Hourly', 10, 10);
 
 INSERT INTO LaborAssignments (Assignment_No, Task_ID, Worker, Pay_Rate, Pay_Type, Est_Hours, Used_Hours)
-VALUES ('W00001-01', 'T004', 'E008', 20.00, 'Hourly', 5, 5);
+VALUES ('A00001', 'T004', 'E008', 20.00, 'Hourly', 5, 5);
+
 
 -- INSERT INVOICE DATA --
-INSERT INTO Invoices (Proposal_No, Invoice_Date, Invoice_Total)
-VALUES ('P00001', TO_DATE('2024-04-05', 'YYYY-MM-DD'), 2500.00);
+INSERT INTO Invoices (Invoice_No, Proposal_No, Invoice_Date, Invoice_Total)
+VALUES ('I00001', 'P00001', TO_DATE('2024-04-05', 'YYYY-MM-DD'), 2500.00);
 
 
 
@@ -461,12 +460,12 @@ SELECT COUNT(*) FROM Materials;
 SELECT COUNT(*) FROM Proposals;
 SELECT COUNT(*) FROM Tasks;
 SELECT COUNT(*) FROM TaskRequests;
---SELECT COUNT(*) FROM WorkOrders;
---SELECT COUNT(*) FROM TaskOrders;
---SELECT COUNT(*) FROM WorkAssignments;
---SELECT COUNT(*) FROM MaterialAssignments;
---SELECT COUNT(*) FROM LaborAssignments;
---SELECT COUNT(*) FROM Invoices;
+SELECT COUNT(*) FROM WorkOrders;
+SELECT COUNT(*) FROM TaskOrders;
+SELECT COUNT(*) FROM WorkAssignments;
+SELECT COUNT(*) FROM MaterialAssignments;
+SELECT COUNT(*) FROM LaborAssignments;
+SELECT COUNT(*) FROM Invoices;
 
 
 COMMIT;
