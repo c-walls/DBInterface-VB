@@ -13,11 +13,11 @@ Public Class WorkOrderPage
     Private workLocationLabel As New Label() With {.Text = "Work Location:"}
     Private workLocationName As New TextBox()
     Private workLocationNameLabel As New Label() With {.Text = "Name:"}
-    Private workLocationAddress As New TextBox() With {.Multiline = True, .Height = 275}
+    Private workLocationAddress As New TextBox() With {.Multiline = True, .Height = workLocationAddress.Height * 2.5}
     Private workLocationAddressLabel As New Label() With {.Text = "Address:"}
     Private workOrderDate As New DateTimePicker() With {.Format = DateTimePickerFormat.Short}
     Private workOrderDateLabel As New Label() With {.Text = "Date:"}
-    Private workOrderNotes As New TextBox() With {.Multiline = True, .Height = 275}
+    Private workOrderNotes As New TextBox() With {.Multiline = True, .Height = workLocationAddress.Height * 2.5}
     Private workOrderNotesLabel As New Label() With {.Text = "Notes:"}
     Private manager As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private managerLabel As New Label() With {.Text = "Manager:"}
