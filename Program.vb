@@ -6,7 +6,7 @@ Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
 ' 1. Create Homepage / Menu --> DGV with tab control and two changing buttons
-' 2. Finish Work Order Form
+' 2. Finish Work Order Form --> Add amount to dashboard rows
 ' 3. Create Work Assignment Form
 ' 4. Create Invoice Form
 ' 5. Update Styling and Test (Themes?)
@@ -17,9 +17,9 @@ Public Class MainForm
     Inherits Form
     Dim screenWidth As Integer = Me.Size.Width
     Dim screenHeight As Integer = Me.Size.Height
-    Private Dashboard As New Dashboard() With {.Dock = DockStyle.Fill}
-    Private ProposalPage As New ProposalPage() With {.Dock = DockStyle.Fill}
-    Private WorkOrderPage As New WorkOrderPage() With {.Dock = DockStyle.Fill}
+    Public Dashboard As New Dashboard() With {.Dock = DockStyle.Fill}
+    Public ProposalPage As New ProposalPage() With {.Dock = DockStyle.Fill}
+    Public WorkOrderPage As New WorkOrderPage() With {.Dock = DockStyle.Fill}
     ' Private WorkAssignmentPage As New WorkAssignmentPage() With {.Dock = DockStyle.Fill}
     ' Private InvoicePage As New InvoicePage() With {.Dock = DockStyle.Fill}
     Private Panel As New Panel() With {.Dock = DockStyle.Fill}

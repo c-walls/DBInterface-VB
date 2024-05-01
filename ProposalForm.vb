@@ -202,12 +202,12 @@ Public Class ProposalPage
     End Sub
 
     Private Sub PopulateTasksList()
-        Dim dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Task_Name FROM Tasks")
+        Dim dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Task_Names FROM Tasks")
 
         ' Set the data source of the DataGridViewComboBoxColumn.
         Tasks_DGColumn.DataSource = dataTable
-        Tasks_DGColumn.DisplayMember = "Task_Name"
-        Tasks_DGColumn.ValueMember = "Task_Name"
+        Tasks_DGColumn.DisplayMember = "Task_Names"
+        Tasks_DGColumn.ValueMember = "Task_Names"
     End Sub
     
     Private Sub SaveProposal()
@@ -262,7 +262,7 @@ Public Class ProposalPage
                     Dim Task_SQFTPrice As Decimal = Decimal.Parse(row.Cells("PricePerSqFt").Value.ToString())
         
                     ' Execute the SELECT statement and check if the result is not null
-                    Dim Task_ID_Object As Object = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Name = '{Task}'")
+                    Dim Task_ID_Object As Object = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Names = '{Task}'")
                     If Task_ID_Object IsNot Nothing Then
                         Dim Task_ID As String = Task_ID_Object.ToString()
         
@@ -350,14 +350,8 @@ Public Class ProposalPage
     End Sub
 
     Private Sub CancelButton_Click(sender As Object, e As EventArgs)
-        ' Remove the current user control
+        Me.Parent.Controls.Add(New dashboard() With {.Dock = DockStyle.Fill})
         Me.Parent.Controls.Remove(Me)
-    
-        ' Display the main menu user control
-        'Dim mainMenu As New MainMenuUserControl()
-        'mainMenu.Dock = DockStyle.Fill
-        'Me.Parent.Controls.Add(mainMenu)
-        'mainMenu.BringToFront()
     End Sub
 
 End Class

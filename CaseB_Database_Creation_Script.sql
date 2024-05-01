@@ -73,7 +73,7 @@ END;
 
 CREATE TABLE Tasks (
     Task_ID CHAR(4),
-    Task_Name VARCHAR(50) CONSTRAINT Task_Name_Required NOT NULL,
+    Task_Names VARCHAR(50) CONSTRAINT Task_Names_Required NOT NULL,
 CONSTRAINT PKTask PRIMARY KEY (Task_ID)
 );
 
@@ -290,28 +290,28 @@ VALUES ('M008', 'Open-Cell Spray Foam', 315.00, 100);
 
 
 -- INSERT TASK DATA --
-INSERT INTO Tasks (Task_ID, Task_Name)
+INSERT INTO Tasks (Task_ID, Task_Names)
 VALUES ('T001', 'Wall Insulation');
 
-INSERT INTO Tasks (Task_ID, Task_Name)
+INSERT INTO Tasks (Task_ID, Task_Names)
 VALUES ('T002', 'Floor Insulation');
 
-INSERT INTO Tasks (Task_ID, Task_Name)
+INSERT INTO Tasks (Task_ID, Task_Names)
 VALUES ('T003', 'Attic Insulation');
 
-INSERT INTO Tasks (Task_ID, Task_Name)
+INSERT INTO Tasks (Task_ID, Task_Names)
 VALUES ('T004', 'Spray Foam Insulation');
 
-INSERT INTO Tasks (Task_ID, Task_Name)
+INSERT INTO Tasks (Task_ID, Task_Names)
 VALUES ('T005', 'Ceiling Insulation');
 
-INSERT INTO Tasks (Task_ID, Task_Name)
+INSERT INTO Tasks (Task_ID, Task_Names)
 VALUES ('T006', 'Ceiling Acoustics');
 
-INSERT INTO Tasks (Task_ID, Task_Name)
+INSERT INTO Tasks (Task_ID, Task_Names)
 VALUES ('T007', 'Asbestos Removal');
 
-INSERT INTO Tasks (Task_ID, Task_Name)
+INSERT INTO Tasks (Task_ID, Task_Names)
 VALUES ('T008', 'Air Sealing');
 
 
