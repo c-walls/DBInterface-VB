@@ -5,27 +5,30 @@ Imports System.Windows.Forms
 Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
-' 1. Proposal Form --> Add Column before customer name with gap and label (Also "New Customer Toggle")
-' 2. Proposal Form --> Add Confirmation message and/or clear form after submission (Also add commit SQL statement)
-' 3. Database --> Add new INSERT statements and auto-increments / triggers as needed
-' 4. Create Homepage / Menu
-' 5. Finish Work Order Form
-' 6. Create Work Assignment Form
-' 7. Create Invoice Form
-' 8. Update Styling and Test (Themes?)
+' 1. Create Homepage / Menu --> DGV with tab control and two changing buttons
+' 2. Finish Work Order Form
+' 3. Create Work Assignment Form
+' 4. Create Invoice Form
+' 5. Update Styling and Test (Themes?)
+' 6. Proposal Form --> Add Column before customer name with gap and label (Also "New Customer Toggle")
+' 7. Proposal Form --> Add Confirmation message and/or clear form after submission (Also add commit SQL statement)
 
 Public Class MainForm
     Inherits Form
     Dim screenWidth As Integer = Me.Size.Width
     Dim screenHeight As Integer = Me.Size.Height
+    Private Dashboard As New Dashboard() With {.Dock = DockStyle.Fill}
     Private ProposalPage As New ProposalPage() With {.Dock = DockStyle.Fill}
+    Private WorkOrderPage As New WorkOrderPage() With {.Dock = DockStyle.Fill}
+    ' Private WorkAssignmentPage As New WorkAssignmentPage() With {.Dock = DockStyle.Fill}
+    ' Private InvoicePage As New InvoicePage() With {.Dock = DockStyle.Fill}
     Private Panel As New Panel() With {.Dock = DockStyle.Fill}
 
     Public Sub New()
         Me.Text = "Insulation Unlimited Database Interface"
         Me.Size = Screen.PrimaryScreen.Bounds.Size
         Controls.Add(Panel)
-        Panel.Controls.Add(ProposalPage)
+        Panel.Controls.Add(Dashboard)
     End Sub
 End Class
 
