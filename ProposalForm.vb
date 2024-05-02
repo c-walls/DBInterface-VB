@@ -46,8 +46,13 @@ Public Class ProposalPage
     Private mainFields As New List(Of Control) From {proposalNo, customerNo, estimationMethod, billingName, billingAddress, dateWritten, status, decisionDate, salesperson, locations}
     Private mainLabels As New List(Of Control) From {proposalNoLabel, customerNoLabel, estimationMethodLabel, billInfoLabel, billingNameLabel, billingAddressLabel, dateWrittenLabel, statusLabel, decisionDateLabel, customerTypeLabel, salespersonLabel, locationsLabel, subTotalLabel, taxLabel, totalLabel}
     Private cust_DataTable As New DataTable()
+    Private edit_CustName As String
+    Private edit_Salesperson As String
+    Public Property existingProposal As String
 
-    Public Sub New()
+    Public Sub New(ByVal existingProposal As String)
+        Me.existingProposal = existingProposal
+
         ' Create a header label
         Dim headerLabel As New Label() With {
             .Text = "Proposal Form",
@@ -134,7 +139,6 @@ Public Class ProposalPage
         tasksDG.Columns(2).DefaultCellStyle.Format = "C2"
         tasksDG.Columns(3).DefaultCellStyle.Format = "C2"
         tasksDG.Columns(3).ReadOnly = True
-        tasksDG.Rows.Add(3)
 
 
         ' Format main controls
@@ -153,7 +157,54 @@ Public Class ProposalPage
         estimationMethod.Items.AddRange(New String() {"Walk Through", "Floor Plan"})
         tasksDG.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         tasksDG.Dock = DockStyle.Fill
-        
+
+        If Not String.IsNullOrEmpty(existingProposal) Then
+            Dim proposalData As DataTable = DBHandler.ExecuteTableQuery($"SELECT * FROM Proposals WHERE Proposal_No = '{existingProposal}'")
+            Dim taskData As DataTable = DBHandler.ExecuteTableQuery($"SELECT TaskRequests.Task_ID, Task_Names, Total_SQFT, Quoted_SQFTPrice FROM TaskRequests JOIN Tasks ON TaskRequests.Task_ID = Tasks.Task_ID WHERE TaskRequests.Proposal_No = '{existingProposal}'")
+            Dim customerType As String = DBHandler.ExecuteValueQuery($"SELECT Cust_Type FROM Customers WHERE Cust_No = '{proposalData.Rows(0)("Cust_No").ToString()}'").ToString()
+            edit_CustName = DBHandler.ExecuteValueQuery($"SELECT Cust_BillName FROM Customers WHERE Cust_No = '{proposalData.Rows(0)("Cust_No").ToString()}'").ToString()
+            edit_Salesperson = DBHandler.ExecuteValueQuery($"SELECT Emp_Name FROM Employees, Proposals WHERE Employees.Emp_ID = Proposals.Salesperson_ID AND Proposal_No = '{existingProposal}'").ToString()
+
+            proposalNo.Text = existingProposal
+            customerNo.Text = proposalData.Rows(0)("Cust_No").ToString()
+            estimationMethod.SelectedItem = proposalData.Rows(0)("Est_Method").ToString()
+            billingName.Text = DBHandler.ExecuteValueQuery($"SELECT Cust_BillName FROM Customers WHERE Cust_No = '{customerNo.Text}'").ToString()
+            billingAddress.Text = DBHandler.ExecuteValueQuery($"SELECT Cust_BillAddress FROM Customers WHERE Cust_No = '{customerNo.Text}'").ToString()
+            locations.Value = Integer.Parse(proposalData.Rows(0)("Location_QTY").ToString())
+            dateWritten.Value = DateTime.Parse(proposalData.Rows(0)("Prop_Date").ToString())
+            status.SelectedItem = proposalData.Rows(0)("Prop_Status").ToString()
+            decisionDate.Value = DateTime.Parse(proposalData.Rows(0)("Decision_Date").ToString())
+            
+
+            Select Case customerType
+                Case "General Contractor"
+                    customerType1.Checked = True
+                Case "Commercial"
+                    customerType2.Checked = True
+                Case "Government"
+                    customerType3.Checked = True
+                Case "Residential"
+                    customerType4.Checked = True
+            End Select
+
+            For Each row As DataRow In taskData.Rows
+                Dim taskIndex As Integer = tasksDG.Rows.Add()
+                tasksDG.Rows(taskIndex).Cells("Task").Value = row("Task_Names").ToString()
+                tasksDG.Rows(taskIndex).Cells("SquareFeet").Value = row("Total_SQFT").ToString()
+                tasksDG.Rows(taskIndex).Cells("PricePerSqFt").Value = row("Quoted_SQFTPrice").ToString()
+                tasksDG_CellEndEdit(tasksDG, New DataGridViewCellEventArgs(1, taskIndex))
+            Next
+        Else
+            ' Set default values
+            dateWritten.Value = DateTime.Now
+            locations.Value = 1
+            salesperson.SelectedItem = ""
+            status.Enabled = False
+            decisionDate.CustomFormat = " "
+            decisionDate.Enabled = False
+            tasksDG.Rows.Add(3)
+        End If
+
         ' Event Handlers
         AddHandler Me.Load, AddressOf UserControl_Load
         AddHandler billingName.SelectionChangeCommitted, AddressOf billingName_SelectionChangeCommitted
@@ -168,11 +219,16 @@ Public Class ProposalPage
         PopulateCustomerList()
         PopulateSalespersonList()
         PopulateTasksList()
-        salesperson.SelectedItem = ""
-        Status.SelectedIndex = 0
+
+        If Not String.IsNullOrEmpty(existingProposal) Then
+            salesperson.SelectedValue = edit_Salesperson
+            billingName.SelectedValue = edit_CustName
+            billingName_SelectionChangeCommitted(sender, e)
+        Else
+            status.SelectedIndex = 0
+        End If
+
         billingAddress.Size = New Size(200, 35)
-        locations.Value = 1
-        DateWritten.Value = DateTime.Now
         billingName.Select()
     End Sub
 
@@ -213,6 +269,74 @@ Public Class ProposalPage
         Tasks_DGColumn.ValueMember = "Task_Names"
     End Sub
     
+
+    Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted
+        If billingName.SelectedIndex = -1 Then
+            ' Clear the address field for new customers
+            billingAddress.Text = ""
+            customerNo.Text = ""
+        Else
+            ' Query the database to get the corresponding address and set it to the address field.
+            Dim selectedBillingName As String = billingName.SelectedValue.ToString()
+            Dim num_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_No FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
+            customerNo.Text = If(num_dataTable.Rows.Count = 1, num_dataTable.Rows(0)("Cust_No").ToString(), "")
+            Dim addr_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_BillAddress FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
+            billingAddress.Text = If(addr_dataTable.Rows.Count = 1, addr_dataTable.Rows(0)("Cust_BillAddress").ToString(), "")
+        End If
+
+        ' Removes highlighting from text after field update
+        Me.BeginInvoke(New Action(Sub() billingName.SelectionLength = 0))
+    End Sub
+
+    Private Sub billingName_KeyDown(sender As Object, e As KeyEventArgs) Handles billingName.KeyDown
+        If e.KeyCode = Keys.Enter Then
+            billingName_SelectionChangeCommitted(sender, e)
+        End If
+    End Sub
+
+    Private Sub billingName_LostFocus(sender As Object, e As EventArgs) Handles billingName.LostFocus
+        billingName_SelectionChangeCommitted(sender, e)
+    End Sub
+
+    Private Sub decisionDate_ValueChanged(sender As Object, e As EventArgs) Handles decisionDate.ValueChanged
+        ' Validate decision date
+        If decisionDate.Value.Date < DateWritten.Value.Date OrElse decisionDate.Value.Date > DateTime.Now.Date Then
+            MessageBox.Show("Decision date invalid." & vbCrLf & vbCrLf & "Choose a date between the creation date and today.", "Invalid Date", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            decisionDate.Value = DateTime.Now.Date
+        End If
+    End Sub
+
+    Private Sub tasksDG_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs)
+        If e.ColumnIndex = 1 Or e.ColumnIndex = 2 Then
+            Dim row = tasksDG.Rows(e.RowIndex)
+            Dim value1 As Integer
+            Dim value2 As Decimal
+            ' if column 2 is not an integer, clear the cell
+            If e.ColumnIndex = 1 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Not Integer.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value1) Then
+                row.Cells(e.ColumnIndex).Value = Nothing
+            ' If column 3 is not a decimal, clear the cell
+            ElseIf e.ColumnIndex = 2 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Decimal.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value2) Then
+                row.Cells(e.ColumnIndex).Value = Math.Round(value2, 2)
+            End If
+    
+            ' If both columns validate, update the 4th column (or clear it if not)
+            If row.Cells(1).Value IsNot Nothing AndAlso Integer.TryParse(row.Cells(1).Value.ToString(), value1) AndAlso row.Cells(2).Value IsNot Nothing AndAlso Decimal.TryParse(row.Cells(2).Value.ToString(), value2) Then
+                value2 = Math.Round(value2, 2)
+                row.Cells(3).Value = value1 * value2
+            Else
+                row.Cells(3).Value = 0D
+            End If
+    
+            'Calculate the subtotal
+            Dim subtotal As Decimal = tasksDG.Rows.Cast(Of DataGridViewRow)().
+                Where(Function(r) Not r.IsNewRow).
+                Sum(Function(r) Convert.ToDecimal(r.Cells(3).Value))
+            calc_subTotal.Text = subtotal.ToString("C2")
+            calc_Tax.Text = (subtotal * 0.082).ToString("C2")
+            calc_total.Text = (subtotal * 1.082).ToString("C2")
+        End If
+    End Sub
+
     Private Sub SaveProposal()
         Dim Cust_No As String = String.Empty
         Dim Location_QTY As Integer = Integer.Parse(locations.Text)
@@ -294,75 +418,12 @@ Public Class ProposalPage
         CancelButton_Click(nothing, nothing)
     End Sub
 
-    Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted
-        If billingName.SelectedIndex = -1 Then
-            ' Clear the address field for new customers
-            billingAddress.Text = ""
-            customerNo.Text = ""
-        Else
-            ' Query the database to get the corresponding address and set it to the address field.
-            Dim selectedBillingName As String = billingName.SelectedValue.ToString()
-            Dim num_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_No FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
-            customerNo.Text = If(num_dataTable.Rows.Count = 1, num_dataTable.Rows(0)("Cust_No").ToString(), "")
-            Dim addr_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_BillAddress FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
-            billingAddress.Text = If(addr_dataTable.Rows.Count = 1, addr_dataTable.Rows(0)("Cust_BillAddress").ToString(), "")
-        End If
-
-        ' Removes highlighting from text after field update
-        Me.BeginInvoke(New Action(Sub() billingName.SelectionLength = 0))
-    End Sub
-
-    Private Sub billingName_KeyDown(sender As Object, e As KeyEventArgs) Handles billingName.KeyDown
-        If e.KeyCode = Keys.Enter Then
-            billingName_SelectionChangeCommitted(sender, e)
-        End If
-    End Sub
-
-    Private Sub billingName_LostFocus(sender As Object, e As EventArgs) Handles billingName.LostFocus
-        billingName_SelectionChangeCommitted(sender, e)
-    End Sub
-
-    Private Sub decisionDate_ValueChanged(sender As Object, e As EventArgs) Handles decisionDate.ValueChanged
-        ' Validate decision date
-        If decisionDate.Value.Date < DateWritten.Value.Date OrElse decisionDate.Value.Date > DateTime.Now.Date Then
-            MessageBox.Show("Decision date invalid." & vbCrLf & vbCrLf & "Choose a date between the creation date and today.", "Invalid Date", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            decisionDate.Value = DateTime.Now.Date
-        End If
-    End Sub
-
-    Private Sub tasksDG_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs)
-        If e.ColumnIndex = 1 Or e.ColumnIndex = 2 Then
-            Dim row = tasksDG.Rows(e.RowIndex)
-            Dim value1 As Integer
-            Dim value2 As Decimal
-            ' if column 2 is not an integer, clear the cell
-            If e.ColumnIndex = 1 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Not Integer.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value1) Then
-                row.Cells(e.ColumnIndex).Value = Nothing
-            ' If column 3 is not a decimal, clear the cell
-            ElseIf e.ColumnIndex = 2 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Decimal.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value2) Then
-                row.Cells(e.ColumnIndex).Value = Math.Round(value2, 2)
-            End If
-    
-            ' If both columns validate, update the 4th column (or clear it if not)
-            If row.Cells(1).Value IsNot Nothing AndAlso Integer.TryParse(row.Cells(1).Value.ToString(), value1) AndAlso row.Cells(2).Value IsNot Nothing AndAlso Decimal.TryParse(row.Cells(2).Value.ToString(), value2) Then
-                value2 = Math.Round(value2, 2)
-                row.Cells(3).Value = value1 * value2
-            Else
-                row.Cells(3).Value = 0D
-            End If
-    
-            'Calculate the subtotal
-            Dim subtotal As Decimal = tasksDG.Rows.Cast(Of DataGridViewRow)().
-                Where(Function(r) Not r.IsNewRow).
-                Sum(Function(r) Convert.ToDecimal(r.Cells(3).Value))
-            calc_subTotal.Text = subtotal.ToString("C2")
-            calc_Tax.Text = (subtotal * 0.082).ToString("C2")
-            calc_total.Text = (subtotal * 1.082).ToString("C2")
-        End If
-    End Sub
-
     Private Sub SaveButton_Click(sender As Object, e As EventArgs)
-        SaveProposal()
+        If IsNothing(existingProposal) Then
+            SaveProposal()
+        Else
+            MessageBox.Show("Editing existing proposals is not supported yet.")
+        End If
     End Sub
 
     Private Sub CancelButton_Click(sender As Object, e As EventArgs)

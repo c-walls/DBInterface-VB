@@ -115,7 +115,9 @@ Public Class Dashboard
             Dim rowIndex = dashboardDGV.SelectedCells(0).RowIndex
             Select Case selectedTab.Text
                 Case "Proposals" ' -- CREATE PROPOSAL --
-                    Me.Parent.Controls.Add(New ProposalPage() With {.Dock = DockStyle.Fill})
+                    Dim existingProposal = String.Empty
+                    Dim proposalPage As New ProposalPage(existingProposal) With {.Dock = DockStyle.Fill}
+                    Me.Parent.Controls.Add(proposalPage)
                     Me.Parent.Controls.Remove(Me)
                 Case "Work Orders" ' -- UPDATE WORK ORDER --
 
@@ -133,7 +135,10 @@ Public Class Dashboard
             Dim rowIndex = dashboardDGV.SelectedCells(0).RowIndex
             Select Case selectedTab.Text
                 Case "Proposals" ' -- EDIT PROPOSAL --
-                    
+                    Dim existingProposal = dashboardDGV.Rows(rowIndex).Cells(0).Value.ToString()
+                    Dim proposalPage As New ProposalPage(existingProposal) With {.Dock = DockStyle.Fill}
+                    Me.Parent.Controls.Add(proposalPage)
+                    Me.Parent.Controls.Remove(Me)
                 Case "Work Orders" ' -- SCHEDULE WORK ASSIGNMENT --
                     Dim workAssignmentForm As New WorkAssignmentPage() With {.Dock = DockStyle.Fill}
                     WorkAssignmentPage.selectedOrder = dashboardDGV.Rows(rowIndex).Cells(0).Value.ToString()
@@ -155,12 +160,11 @@ Public Class Dashboard
                 Case "Proposals" ' -- CREATE WORK ORDER --
                     Dim selectedProposal = dashboardDGV.Rows(rowIndex).Cells(0).Value.ToString()
                     Dim locationQTY = dashboardDGV.Rows(rowIndex).Cells(2).Value.ToString()
-                    WorkOrderPage.selectedProposal = selectedProposal
 
                     ' Create a new page instance for each location
                     For i As Integer = 1 To locationQTY
                         Dim generatedWorkOrder = "W" & selectedProposal.Substring(2, 4) & "-" & i.ToString("D2")
-                        Dim workOrderControl As New WorkOrderPage(generatedWorkOrder) With {.Dock = DockStyle.Fill}
+                        Dim workOrderControl As New WorkOrderPage(selectedProposal, generatedWorkOrder) With {.Dock = DockStyle.Fill}
                         Me.Parent.Controls.Add(workOrderControl)
                     Next
 

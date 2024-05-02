@@ -29,13 +29,14 @@ Public Class WorkOrderPage
     Private WithEvents taskOrderDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
     Private taskOrder_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Task", .Name = "Task"}
 
-    Public Shared selectedProposal As String
+    Public Property selectedProposal As String
     Public Property generatedWorkOrder As String
     Private mainFields As Control() = {workOrderNo, proposalNo, workLocationName, workLocationAddress, workOrderDate, workOrderNotes, manager, dateRequired}
     Private mainLabels As Label() = {workOrderNoLabel, proposalNoLabel, workLocationLabel, workLocationNameLabel, workLocationAddressLabel, workOrderDateLabel, workOrderNotesLabel, managerLabel, dateRequiredLabel}
 
 
-    Public Sub New(generatedWorkOrder As String)
+    Public Sub New(ByVal selectedProposal As String, ByVal generatedWorkOrder As String)
+        Me.selectedProposal = selectedProposal
         Me.generatedWorkOrder = generatedWorkOrder
 
         Dim headerLabel As New Label() With {
