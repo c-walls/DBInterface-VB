@@ -17,7 +17,7 @@ Public Class WorkAssignmentPage
     Private workLocationAddressLabel As New Label() With {.Text = "Address:"}
     Private startDate As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = "MM/dd/yyyy"}
     Private startDateLabel As New Label() With {.Text = "Start Date:"}
-    Private endDate As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = " "}
+    Private WithEvents endDate As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = " ", .ShowCheckBox = True, .Checked = False}
     Private endDateLabel As New Label() With {.Text = "End Date:"}
     Private vehicleNo As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private vehicleNoLabel As New Label() With {.Text = "Vehicle Number:"}
@@ -157,6 +157,7 @@ Public Class WorkAssignmentPage
         AddHandler CancelButton.Click, AddressOf CancelButton_Click
         AddHandler materialAssignDG.CellEndEdit, AddressOf materialAssignDG_CellEndEdit
         AddHandler laborAssignDG.CellEndEdit, AddressOf laborAssignDG_CellEndEdit
+        AddHandler endDate.ValueChanged, AddressOf EndDate_ValueChanged
     End Sub
 
     Private Sub WorkOrderPage_Load(sender As Object, e As EventArgs) Handles Me.Load
@@ -282,6 +283,14 @@ Public Class WorkAssignmentPage
 
         ' MessageBox.Show("Work Order created successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
         ' CancelButton_Click(nothing, nothing)
+    End Sub
+
+    Private Sub EndDate_ValueChanged(sender As Object, e As EventArgs) Handles EndDate.ValueChanged
+        ' Allow status change only when decision date is set
+        'status.Enabled = endDate.Checked
+        If Not endDate.Checked Then
+       '     status.SelectedIndex = 0
+        End If
     End Sub
 
     Private Sub SaveButton_Click(sender As Object, e As EventArgs)

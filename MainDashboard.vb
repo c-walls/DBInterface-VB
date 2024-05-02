@@ -79,7 +79,7 @@ Public Class Dashboard
                                                                   INNER JOIN Employees ON Proposals.Salesperson_ID = Employees.Emp_ID 
                                                                   LEFT JOIN taskRequests ON Proposals.Proposal_No = taskRequests.Proposal_No
                                                                   GROUP BY Proposals.Proposal_No, Cust_BillName, Location_QTY, Prop_Status, Emp_Name, Prop_Date
-                                                                  ORDER BY Prop_Date DESC")
+                                                                  ORDER BY CASE Prop_Status WHEN 'Pending' THEN 1 WHEN 'Accepted' THEN 2 WHEN 'Denied' THEN 3 ELSE 4 END, Prop_Date DESC")
         Case "Work Orders"
             button1.Text = "Edit Work Order"
             button2.Text = "Create Work Order"
@@ -94,9 +94,16 @@ Public Class Dashboard
         Case "Work Assignments"
             button1.Text = "Schedule Work"
             button2.Text = "Update Assignment"
-            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT WorkOrders.Order_No, Location_Name, Location_Address, Required_Date,
-                                                                    CASE WHEN WorkAssignments.Order_No IS NULL THEN 'No' ELSE 'Yes' END AS Assigned 
-                                                                    FROM WorkOrders LEFT JOIN WorkAssignments ON WorkOrders.Order_No = WorkAssignments.Order_No")
+            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT WorkOrders.Order_No, Location_Name As Location, Location_Address As Address, Required_Date As Deadline,
+                                                        LastAssignments.Assignment_No As Last_Assignment,
+                                                        CASE WHEN LastAssignments.Assignment_No IS NOT NULL AND LastAssignments.Finish_Date IS NULL THEN 'In progress'
+                                                            WHEN LastAssignments.Assignment_No IS NULL AND LastAssignments.Finish_Date IS NULL THEN ''
+                                                            ELSE 'Closed - ' || TO_CHAR(LastAssignments.Finish_Date, 'MM/DD/YYYY') END As Assignment_Status
+                                                        FROM WorkOrders 
+                                                        LEFT JOIN (SELECT Order_No, Assignment_No, Finish_Date, ROW_NUMBER() OVER (PARTITION BY Order_No ORDER BY Assignment_No DESC) AS rn
+                                                                 FROM WorkAssignments) LastAssignments ON WorkOrders.Order_No = LastAssignments.Order_No AND LastAssignments.rn = 1
+                                                        WHERE WorkOrders.Order_No IN (SELECT Order_No FROM TaskOrders WHERE Date_Complete IS NULL)")
+
         Case "Invoices"
             button1.Text = "Button 1"
             button2.Text = "Button 2"

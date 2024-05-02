@@ -10,7 +10,7 @@ Public Class WorkOrderPage
     Private workOrderNoLabel As New Label() With {.Text = "Work Order Number:"}
     Private proposalNo As New TextBox() With {.ReadOnly = True}
     Private proposalNoLabel As New Label() With {.Text = "Proposal Number:"}
-    Private workLocationLabel As New Label() With {.Text = "Work Location:"}
+    Private workLocationLabel As New Label() With {.Text = "Work Location:", .Font = New Font(Control.DefaultFont, FontStyle.Bold)}
     Private workLocationName As New TextBox()
     Private workLocationNameLabel As New Label() With {.Text = "Name:"}
     Private workLocationAddress As New TextBox() With {.Multiline = True}

@@ -6,14 +6,12 @@ Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
 ' 1. Work Order Form --> Primary to Secondary
-' 2. Work Assignment --> Add "Assigned To" vs existing to > "In Progress?" 
-' 3. Work Assignment Form -->
+' 2. Work Assignment --> Finish Date to -> Status? Also exclude closed assignments?
+' 3. Work Assignment Form --> Move Pay_RateType to Employee Table / link to dropdown and calculate labor costs
 ' 4. Create Invoice Form
-' 5. Proposal Form --> Add Column before customer name with gap and label
-' 6. Proposal Form --> Add "New Customer" Toggle * Fix address Height
-' 7. Proposal Form --> Editing Functionality
-' 8. Add SQL Commits
-' 9. Add WinForms Themes?
+' 5. Proposal Form --> Editing Functionality
+' 6. Add SQL Commits
+' 7. Add WinForms Themes?
 
 Public Class MainForm
     Inherits Form

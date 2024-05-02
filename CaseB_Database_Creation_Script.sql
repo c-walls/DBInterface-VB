@@ -438,8 +438,8 @@ VALUES ('T005', 'W00004-01', 450, 9, 'Pending');
 INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
 VALUES ('A00001', 'W00001-01', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 1);
 
-INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
-VALUES ('A00002', 'W00001-02', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 1);
+INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Supervisor_ID, Vehicle_No)
+VALUES ('A00002', 'W00001-02', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), 'E005', 1);
 
 
 -- INSERT MATERIAL ASSIGNMENT DATA --

@@ -12,17 +12,18 @@ Public Class ProposalPage
     Private customerNoLabel As New Label() With {.Text = "Customer Number:"}
     Private estimationMethod As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private estimationMethodLabel As New Label() With {.Text = "Estimation Method:"}
-    Private WithEvents billingName As New ComboBox()
+    Private billInfoLabel As New Label() With {.Text = "Billing Information:", .Font = New Font(Control.DefaultFont, FontStyle.Bold), .Padding = New Padding(0, 10, 0, 0)}
+    Private WithEvents billingName As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDown}
     Private billingNameLabel As New Label() With {.Text = "Customer Name:"}
-    Private billingAddress As New TextBox() With {.ReadOnly = True, .Multiline = True, .Height = billingName.Height * 2.5}
+    Private billingAddress As New TextBox() With {.Multiline = True}
     Private billingAddressLabel As New Label() With {.Text = "Billing Address:"}
     Private locations As New NumericUpDown() With {.Minimum = 1, .Maximum = 20}
     Private locationsLabel As New Label() With {.Text = "Locations:"}
-    Private dateWritten As New DateTimePicker() With {.Format = DateTimePickerFormat.Short}
+    Private dateWritten As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = "MM/dd/yyyy"}
     Private dateWrittenLabel As New Label() With {.Text = "Date Written:"}
     Private status As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private statusLabel As New Label() With {.Text = "Proposal Status:"}
-    Private WithEvents decisionDate As New DateTimePicker() With {.ShowCheckBox = True, .Checked = False, .Format = DateTimePickerFormat.Short}
+    Private WithEvents decisionDate As New DateTimePicker() With {.ShowCheckBox = True, .Checked = False, .Format = DateTimePickerFormat.Custom,  .CustomFormat = "MM/dd/yyyy"}
     Private decisionDateLabel As New Label() With {.Text = "Decision Date:"}
     Private WithEvents tasksDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
     Private Tasks_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Task", .Name = "Task"} 
@@ -39,11 +40,11 @@ Public Class ProposalPage
     Private customerTypeLabel As New Label() With {.Text = "Customer Type:"}
     Private salesperson As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private salespersonLabel As New Label() With {.Text = "Salesperson:"}
-    Private saveButton As New Button() With {.Text = "Create", .Dock = DockStyle.Top, .Margin = New Padding(0, 120, 0, 0), .Height = 40}
-    Private cancelButton As New Button() With {.Text = "Cancel", .Dock = DockStyle.Top, .Margin = New Padding(0, 120, 0, 0), .Height = 40}
+    Private saveButton As New Button() With {.Text = "Create", .Dock = DockStyle.Top, .Margin = New Padding(0, 80, 0, 0), .Height = 40}
+    Private cancelButton As New Button() With {.Text = "Cancel", .Dock = DockStyle.Top, .Margin = New Padding(0, 80, 0, 0), .Height = 40}
 
     Private mainFields As New List(Of Control) From {proposalNo, customerNo, estimationMethod, billingName, billingAddress, dateWritten, status, decisionDate, salesperson, locations}
-    Private mainLabels As New List(Of Control) From {proposalNoLabel, customerNoLabel, estimationMethodLabel, billingNameLabel, billingAddressLabel, dateWrittenLabel, statusLabel, decisionDateLabel, customerTypeLabel, salespersonLabel, locationsLabel, subTotalLabel, taxLabel, totalLabel}
+    Private mainLabels As New List(Of Control) From {proposalNoLabel, customerNoLabel, estimationMethodLabel, billInfoLabel, billingNameLabel, billingAddressLabel, dateWrittenLabel, statusLabel, decisionDateLabel, customerTypeLabel, salespersonLabel, locationsLabel, subTotalLabel, taxLabel, totalLabel}
     Private cust_DataTable As New DataTable()
 
     Public Sub New()
@@ -65,12 +66,13 @@ Public Class ProposalPage
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 14))
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 18))
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25))
-        tableLayoutPanel.RowCount = 17
+        tableLayoutPanel.RowCount = 18
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 3))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 4))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2.5))
@@ -92,38 +94,39 @@ Public Class ProposalPage
         tableLayoutPanel.Controls.Add(customerNo, 1, 3)
         tableLayoutPanel.Controls.Add(estimationMethodLabel, 0, 4)
         tableLayoutPanel.Controls.Add(estimationMethod, 1, 4)
-        tableLayoutPanel.Controls.Add(billingNameLabel, 0, 5)
-        tableLayoutPanel.Controls.Add(billingName, 1, 5)
-        tableLayoutPanel.Controls.Add(billingAddressLabel, 0, 6)
-        tableLayoutPanel.Controls.Add(billingAddress, 1, 6)
-        tableLayoutPanel.Controls.Add(locationsLabel, 0, 7)
-        tableLayoutPanel.Controls.Add(locations, 1, 7)
-        tableLayoutPanel.Controls.Add(subTotalLabel, 0, 9)
-        tableLayoutPanel.Controls.Add(calc_subTotal, 4, 9)
-        tableLayoutPanel.Controls.Add(taxLabel, 0, 10)
-        tableLayoutPanel.Controls.Add(calc_tax, 4, 10)
-        tableLayoutPanel.Controls.Add(totalLabel, 0, 11)
-        tableLayoutPanel.Controls.Add(calc_total, 4, 11)
-        tableLayoutPanel.Controls.Add(customerTypeLabel, 0, 13)
-        tableLayoutPanel.Controls.Add(customerType1, 1, 13)
-        tableLayoutPanel.Controls.Add(customerType2, 2, 13)
-        tableLayoutPanel.Controls.Add(customerType3, 1, 14)
-        tableLayoutPanel.Controls.Add(customerType4, 2, 14)
-        tableLayoutPanel.Controls.Add(salespersonLabel, 0, 15)
-        tableLayoutPanel.Controls.Add(salesperson, 1, 15)
+        tableLayoutPanel.Controls.Add(billInfoLabel, 0, 5)
+        tableLayoutPanel.Controls.Add(billingNameLabel, 0, 6)
+        tableLayoutPanel.Controls.Add(billingName, 1, 6)
+        tableLayoutPanel.Controls.Add(billingAddressLabel, 0, 7)
+        tableLayoutPanel.Controls.Add(billingAddress, 1, 7)
+        tableLayoutPanel.Controls.Add(locationsLabel, 0, 8)
+        tableLayoutPanel.Controls.Add(locations, 1, 8)
+        tableLayoutPanel.Controls.Add(subTotalLabel, 0, 10)
+        tableLayoutPanel.Controls.Add(calc_subTotal, 4, 10)
+        tableLayoutPanel.Controls.Add(taxLabel, 0, 11)
+        tableLayoutPanel.Controls.Add(calc_tax, 4, 11)
+        tableLayoutPanel.Controls.Add(totalLabel, 0, 12)
+        tableLayoutPanel.Controls.Add(calc_total, 4, 12)
+        tableLayoutPanel.Controls.Add(customerTypeLabel, 0, 14)
+        tableLayoutPanel.Controls.Add(customerType1, 1, 14)
+        tableLayoutPanel.Controls.Add(customerType2, 2, 14)
+        tableLayoutPanel.Controls.Add(customerType3, 1, 15)
+        tableLayoutPanel.Controls.Add(customerType4, 2, 15)
+        tableLayoutPanel.Controls.Add(salespersonLabel, 0, 16)
+        tableLayoutPanel.Controls.Add(salesperson, 1, 16)
         tableLayoutPanel.Controls.Add(dateWrittenLabel, 3, 2)
         tableLayoutPanel.Controls.Add(dateWritten, 4, 2)
         tableLayoutPanel.Controls.Add(statusLabel, 3, 3)
         tableLayoutPanel.Controls.Add(status, 4, 3)
         tableLayoutPanel.Controls.Add(decisionDateLabel, 3, 4)
         tableLayoutPanel.Controls.Add(decisionDate, 4, 4)
-        tableLayoutPanel.Controls.Add(saveButton, 1, 16)
-        tableLayoutPanel.Controls.Add(cancelButton, 3, 16)
+        tableLayoutPanel.Controls.Add(saveButton, 1, 17)
+        tableLayoutPanel.Controls.Add(cancelButton, 3, 17)
 
         ' Configure DataGridView
         tasksDG.Margin = New Padding(200, 40, 200, 10)
         tableLayoutPanel.SetColumnSpan(tasksDG, 5)
-        tableLayoutPanel.Controls.Add(tasksDG, 0, 8)
+        tableLayoutPanel.Controls.Add(tasksDG, 0, 9)
         tasksDG.Columns.Insert(0, Tasks_DGColumn)
         tasksDG.Columns.Add("SquareFeet", "Square Feet")
         tasksDG.Columns.Add("PricePerSqFt", "Price/SqFt")
@@ -146,7 +149,7 @@ Public Class ProposalPage
             label.TextAlign = ContentAlignment.MiddleRight
         Next
 
-        status.Items.AddRange(New String() {"Pending", "Accepted", "Rejected"})
+        status.Items.AddRange(New String() {"Pending", "Accepted", "Denied"})
         status.Enabled = decisionDate.Checked
         estimationMethod.Items.AddRange(New String() {"Walk Through", "Floor Plan"})
         tasksDG.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
@@ -168,6 +171,7 @@ Public Class ProposalPage
         PopulateTasksList()
         salesperson.SelectedItem = ""
         Status.SelectedIndex = 0
+        billingAddress.Size = New Size(200, 35)
         locations.Value = 1
         DateWritten.Value = DateTime.Now
         billingName.Select()
@@ -221,18 +225,24 @@ Public Class ProposalPage
         Dim Decision_Date As String = DateTime.Parse(decisionDate.Text)
         Dim Customer_Type As String = If(customerType1.Checked, "General Contractor", If(customerType2.Checked, "Commercial", If(customerType3.Checked, "Government", "Residential")))
 
-        IF String.IsNullOrEmpty(billingName.Text) Then
-        ' Insert a new customer record
-            Dim Cust_Insert As String = $"INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type) VALUES ('{billingName.Text}', '{billingAddress.Text}', '{Customer_Type}')"
-            Dim Cust_rowsAffected As Integer = DBHandler.ExecuteStatement(Cust_Insert)
-            If Cust_rowsAffected > 0 Then
-                Cust_No = DBHandler.ExecuteValueQuery($"SELECT Cust_No FROM Customers WHERE Cust_BillName = '{billingName.Text}'").ToString()
-                customerNo.Text = Cust_No
+        If Not String.IsNullOrEmpty(billingName.Text) Then
+            ' Check if the billing name already exists in the Customers table
+            Dim existingCustomer As Object = DBHandler.ExecuteValueQuery($"SELECT Cust_No FROM Customers WHERE Cust_BillName = '{billingName.Text}'")
+            If existingCustomer Is Nothing Then
+                ' Insert a new customer record
+                Dim Cust_Insert As String = $"INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type) VALUES ('{billingName.Text}', '{billingAddress.Text}', '{Customer_Type}')"
+                Dim Cust_rowsAffected As Integer = DBHandler.ExecuteStatement(Cust_Insert)
+                If Cust_rowsAffected > 0 Then
+                    Cust_No = DBHandler.ExecuteValueQuery($"SELECT Cust_No FROM Customers WHERE Cust_BillName = '{billingName.Text}'").ToString()
+                    customerNo.Text = Cust_No
+                Else
+                    MessageBox.Show("New customer could not be added.")
+                End If
             Else
-                MessageBox.Show("New customer could not be added.")
+                Cust_No = customerNo.Text
             End If
         Else
-            Cust_No = customerNo.Text
+            MessageBox.Show("Customer name required.")
         End If
 
         ' Get the next proposal number
@@ -286,13 +296,19 @@ Public Class ProposalPage
     End Sub
 
     Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted
-        ' Query the database to get the corresponding address and set it to the address field.
-        Dim selectedBillingName As String = billingName.SelectedValue.ToString()
-        Dim num_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_No FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
-        customerNo.Text = If(num_dataTable.Rows.Count = 1, num_dataTable.Rows(0)("Cust_No").ToString(), "")
-        Dim addr_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_BillAddress FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
-        billingAddress.Text = If(addr_dataTable.Rows.Count = 1, addr_dataTable.Rows(0)("Cust_BillAddress").ToString(), "")
-        
+        If billingName.SelectedIndex = -1 Then
+            ' Clear the address field for new customers
+            billingAddress.Text = ""
+            customerNo.Text = ""
+        Else
+            ' Query the database to get the corresponding address and set it to the address field.
+            Dim selectedBillingName As String = billingName.SelectedValue.ToString()
+            Dim num_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_No FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
+            customerNo.Text = If(num_dataTable.Rows.Count = 1, num_dataTable.Rows(0)("Cust_No").ToString(), "")
+            Dim addr_dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_BillAddress FROM Customers WHERE Cust_BillName = '" & selectedBillingName & "'")
+            billingAddress.Text = If(addr_dataTable.Rows.Count = 1, addr_dataTable.Rows(0)("Cust_BillAddress").ToString(), "")
+        End If
+
         ' Removes highlighting from text after field update
         Me.BeginInvoke(New Action(Sub() billingName.SelectionLength = 0))
     End Sub
@@ -301,6 +317,10 @@ Public Class ProposalPage
         If e.KeyCode = Keys.Enter Then
             billingName_SelectionChangeCommitted(sender, e)
         End If
+    End Sub
+
+    Private Sub billingName_LostFocus(sender As Object, e As EventArgs) Handles billingName.LostFocus
+        billingName_SelectionChangeCommitted(sender, e)
     End Sub
 
     Private Sub decisionDate_ValueChanged(sender As Object, e As EventArgs) Handles decisionDate.ValueChanged
