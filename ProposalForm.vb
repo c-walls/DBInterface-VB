@@ -46,8 +46,7 @@ Public Class ProposalPage
     Private mainFields As New List(Of Control) From {proposalNo, customerNo, estimationMethod, billingName, billingAddress, dateWritten, status, decisionDate, salesperson, locations}
     Private mainLabels As New List(Of Control) From {proposalNoLabel, customerNoLabel, estimationMethodLabel, billInfoLabel, billingNameLabel, billingAddressLabel, dateWrittenLabel, statusLabel, decisionDateLabel, customerTypeLabel, salespersonLabel, locationsLabel, subTotalLabel, taxLabel, totalLabel}
     Private cust_DataTable As New DataTable()
-    Private edit_CustName As String
-    Private edit_Salesperson As String
+    Private originalValues As New Dictionary(Of String, Object)
     Public Property existingProposal As String
 
     Public Sub New(ByVal existingProposal As String)
@@ -157,26 +156,31 @@ Public Class ProposalPage
         estimationMethod.Items.AddRange(New String() {"Walk Through", "Floor Plan"})
         tasksDG.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         tasksDG.Dock = DockStyle.Fill
-
+        
         If Not String.IsNullOrEmpty(existingProposal) Then
             Dim proposalData As DataTable = DBHandler.ExecuteTableQuery($"SELECT * FROM Proposals WHERE Proposal_No = '{existingProposal}'")
             Dim taskData As DataTable = DBHandler.ExecuteTableQuery($"SELECT TaskRequests.Task_ID, Task_Names, Total_SQFT, Quoted_SQFTPrice FROM TaskRequests JOIN Tasks ON TaskRequests.Task_ID = Tasks.Task_ID WHERE TaskRequests.Proposal_No = '{existingProposal}'")
-            Dim customerType As String = DBHandler.ExecuteValueQuery($"SELECT Cust_Type FROM Customers WHERE Cust_No = '{proposalData.Rows(0)("Cust_No").ToString()}'").ToString()
-            edit_CustName = DBHandler.ExecuteValueQuery($"SELECT Cust_BillName FROM Customers WHERE Cust_No = '{proposalData.Rows(0)("Cust_No").ToString()}'").ToString()
-            edit_Salesperson = DBHandler.ExecuteValueQuery($"SELECT Emp_Name FROM Employees, Proposals WHERE Employees.Emp_ID = Proposals.Salesperson_ID AND Proposal_No = '{existingProposal}'").ToString()
-
-            proposalNo.Text = existingProposal
-            customerNo.Text = proposalData.Rows(0)("Cust_No").ToString()
-            estimationMethod.SelectedItem = proposalData.Rows(0)("Est_Method").ToString()
-            billingName.Text = DBHandler.ExecuteValueQuery($"SELECT Cust_BillName FROM Customers WHERE Cust_No = '{customerNo.Text}'").ToString()
-            billingAddress.Text = DBHandler.ExecuteValueQuery($"SELECT Cust_BillAddress FROM Customers WHERE Cust_No = '{customerNo.Text}'").ToString()
-            locations.Value = Integer.Parse(proposalData.Rows(0)("Location_QTY").ToString())
-            dateWritten.Value = DateTime.Parse(proposalData.Rows(0)("Prop_Date").ToString())
-            status.SelectedItem = proposalData.Rows(0)("Prop_Status").ToString()
-            decisionDate.Value = DateTime.Parse(proposalData.Rows(0)("Decision_Date").ToString())
-            
-
-            Select Case customerType
+        
+            ' Store the original values in the dictionary
+            originalValues("Proposal_No") = existingProposal
+            originalValues("Cust_No") = proposalData.Rows(0)("Cust_No").ToString()
+            originalValues("Est_Method") = proposalData.Rows(0)("Est_Method").ToString()
+            originalValues("billingName") = DBHandler.ExecuteValueQuery($"SELECT Cust_BillName FROM Customers WHERE Cust_No = '{originalValues("Cust_No")}'").ToString()
+            originalValues("billingAddress") = DBHandler.ExecuteValueQuery($"SELECT Cust_BillAddress FROM Customers WHERE Cust_No = '{originalValues("Cust_No")}'").ToString()
+            originalValues("Location_QTY") = Integer.Parse(proposalData.Rows(0)("Location_QTY").ToString())
+            originalValues("Prop_Date") = DateTime.Parse(proposalData.Rows(0)("Prop_Date").ToString())
+            originalValues("Prop_Status") = proposalData.Rows(0)("Prop_Status").ToString()
+            originalValues("Cust_Type") = DBHandler.ExecuteValueQuery($"SELECT Cust_Type FROM Customers WHERE Cust_No = '{proposalData.Rows(0)("Cust_No").ToString()}'").ToString()
+            originalValues("Salesperson_ID") = proposalData.Rows(0)("Salesperson_ID").ToString()
+        
+            ' Set the form fields
+            proposalNo.Text = originalValues("Proposal_No").ToString()
+            estimationMethod.SelectedItem = originalValues("Est_Method").ToString()
+            locations.Value = originalValues("Location_QTY")
+            dateWritten.Value = originalValues("Prop_Date")
+            status.SelectedItem = originalValues("Prop_Status").ToString()
+  
+            Select Case originalValues("Cust_Type")
                 Case "General Contractor"
                     customerType1.Checked = True
                 Case "Commercial"
@@ -221,9 +225,15 @@ Public Class ProposalPage
         PopulateTasksList()
 
         If Not String.IsNullOrEmpty(existingProposal) Then
-            salesperson.SelectedValue = edit_Salesperson
-            billingName.SelectedValue = edit_CustName
+            salesperson.SelectedValue = DBHandler.ExecuteValueQuery($"SELECT Emp_Name FROM Employees, Proposals WHERE Employees.Emp_ID = Proposals.Salesperson_ID AND Proposal_No = '{existingProposal}'").ToString()
+            billingName.SelectedValue = originalValues("billingName")
             billingName_SelectionChangeCommitted(sender, e)
+            proposalNo.ReadOnly = True
+            customerNo.ReadOnly = True
+            billingName.Enabled = False
+            billingAddress.ReadOnly = True
+            dateWritten.Enabled = False
+            tasksDG.Columns(0).ReadOnly = True
         Else
             status.SelectedIndex = 0
         End If
@@ -235,7 +245,7 @@ Public Class ProposalPage
     Private Sub PopulateCustomerList()
         cust_DataTable = DBHandler.ExecuteTableQuery("SELECT Cust_BillName FROM Customers")
         
-        ' Insert an empty row at the beginning of the cust_DataTable.
+        ' Insert an empty row at the beginning
         Dim row As DataRow = cust_DataTable.NewRow()
         row("Cust_BillName") = ""
         cust_DataTable.Rows.InsertAt(row, 0)
@@ -250,7 +260,7 @@ Public Class ProposalPage
     Private Sub PopulateSalespersonList()
         Dim dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Emp_Name FROM Employees WHERE Emp_Role = 'Salesperson'")
         
-        ' Insert an empty row at the beginning of the DataTable.
+        ' Insert an empty row at the beginning
         Dim row As DataRow = dataTable.NewRow()
         row("Emp_Name") = ""
         dataTable.Rows.InsertAt(row, 0)
@@ -263,7 +273,6 @@ Public Class ProposalPage
     Private Sub PopulateTasksList()
         Dim dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Task_Names FROM Tasks")
 
-        ' Set the data source of the DataGridViewComboBoxColumn.
         Tasks_DGColumn.DataSource = dataTable
         Tasks_DGColumn.DisplayMember = "Task_Names"
         Tasks_DGColumn.ValueMember = "Task_Names"
@@ -345,7 +354,6 @@ Public Class ProposalPage
         Dim Salesperson_ID As String = DBHandler.ExecuteValueQuery($"SELECT Emp_ID FROM Employees WHERE Emp_Name = '{Salesperson_Name}'").ToString()
         Dim Prop_Date As Date = DateTime.Parse(dateWritten.Text)
         Dim Prop_Status As String = status.Text
-        Dim Decision_Date As String = DateTime.Parse(decisionDate.Text)
         Dim Customer_Type As String = If(customerType1.Checked, "General Contractor", If(customerType2.Checked, "Commercial", If(customerType3.Checked, "Government", "Residential")))
 
         If Not String.IsNullOrEmpty(billingName.Text) Then
@@ -372,8 +380,8 @@ Public Class ProposalPage
         Dim Prop_No As String = "P" + (DBHandler.ExecuteValueQuery("SELECT NVL(MAX(TO_NUMBER(SUBSTR(Proposal_No, 2))), 0) FROM Proposals") + 1).ToString().PadLeft(5, "0"c)
 
         ' INSERT Proposals Record
-        Dim fields As String = "Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status" & If(String.IsNullOrEmpty(Decision_Date), "", ", Decision_Date")
-        Dim values As String = $"'{Cust_No}', {Location_QTY}, '{Est_Method}', '{Salesperson_ID}', TO_DATE('{Prop_Date:yyyy-MM-dd}', 'YYYY-MM-DD'), '{Prop_Status}'" & If(String.IsNullOrEmpty(Decision_Date), "", $", TO_DATE('{DateTime.Parse(Decision_Date):yyyy-MM-dd}', 'YYYY-MM-DD')")
+        Dim fields As String = "Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status"
+        Dim values As String = $"'{Cust_No}', {Location_QTY}, '{Est_Method}', '{Salesperson_ID}', TO_DATE('{Prop_Date:yyyy-MM-dd}', 'YYYY-MM-DD'), '{Prop_Status}'"
         Dim Prop_Insert As String = $"INSERT INTO Proposals ({fields}) VALUES ({values})"
         Dim rowsAffected As Integer = DBHandler.ExecuteStatement(Prop_Insert)
 
@@ -384,28 +392,24 @@ Public Class ProposalPage
             MessageBox.Show("Proposal insertion failed.")
         End If
 
-        ' Iterate over the rows of the DataGridView
+        ' Process DataGridView
         For Each row As DataGridViewRow In tasksDG.Rows
             If Not row.IsNewRow Then
                 ' Check if the cells are not null before getting their values
                 If row.Cells("Task").Value IsNot Nothing And row.Cells("SquareFeet").Value IsNot Nothing And row.Cells("PricePerSqFt").Value IsNot Nothing Then
-                    ' Get the values from the cells of the row
                     Dim Task As String = row.Cells("Task").Value.ToString()
                     Dim Task_SQFT As String = row.Cells("SquareFeet").Value.ToString()
                     Dim Task_SQFTPrice As Decimal = Decimal.Parse(row.Cells("PricePerSqFt").Value.ToString())
         
-                    ' Execute the SELECT statement and check if the result is not null
+                    ' Execute the SELECT statement and check if null
                     Dim Task_ID_Object As Object = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Names = '{Task}'")
                     If Task_ID_Object IsNot Nothing Then
                         Dim Task_ID As String = Task_ID_Object.ToString()
         
-                        ' Construct the INSERT statement
+                        ' Execute INSERT statement
                         Dim Task_Insert As String = $"INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice) VALUES ('{Prop_No}', '{Task_ID}', {Task_SQFT}, {Task_SQFTPrice})"
-        
-                        ' Execute the INSERT statement
                         Dim Task_rowsAffected As Integer = DBHandler.ExecuteStatement(Task_Insert)
         
-                        ' Check if the task was inserted successfully
                         If Task_rowsAffected <= 0 Then
                             MessageBox.Show($"Task insertion failed for Task: {Task}.")
                         End If
@@ -413,16 +417,96 @@ Public Class ProposalPage
                 End If
             End If
         Next
+    End Sub
+        
+    Private Sub EditProposal()
+        Dim updateStatements As New List(Of String)
 
-        MessageBox.Show("Proposal created successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-        CancelButton_Click(nothing, nothing)
+        ' Chonstruct update statements
+        For Each pair In originalValues
+            Dim fieldName = pair.Key
+            Dim originalValue = pair.Value
+            Dim currentValue As Object = Nothing
+
+            ' Get the current value of the field
+            Select Case fieldName
+                Case "Est_Method"
+                    currentValue = estimationMethod.SelectedItem
+                Case "Prop_Status"
+                    currentValue = status.SelectedItem
+                Case "Location_QTY"
+                    currentValue = locations.Value
+                Case "Cust_Type"
+                    If customerType1.Checked Then
+                        currentValue = "General Contractor"
+                    ElseIf customerType2.Checked Then
+                        currentValue = "Commercial"
+                    ElseIf customerType3.Checked Then
+                        currentValue = "Government"
+                    ElseIf customerType4.Checked Then
+                        currentValue = "Residential"
+                    End If
+                Case "Salesperson_ID"
+                    Dim salespersonName = salesperson.SelectedValue
+                    currentValue = DBHandler.ExecuteValueQuery($"SELECT Emp_ID FROM Employees WHERE Emp_Name = '{salespersonName}'")
+                Case Else
+                    Continue For
+            End Select
+            
+            ' Compare the current value with the original value
+            If Not Object.Equals(currentValue, originalValue) Then
+                Dim updateStatement As String
+                If fieldName = "Cust_Type" Then
+                    updateStatement = $"UPDATE Customers SET {fieldName} = '{currentValue}' WHERE Cust_No = '{originalValues("Cust_No")}'"
+                Else
+                    updateStatement = $"UPDATE Proposals SET {fieldName} = '{currentValue}' WHERE Proposal_No = '{originalValues("Proposal_No")}'"
+                End If
+                updateStatements.Add(updateStatement)
+            End If
+        Next
+
+        If status.SelectedItem.ToString() = "Accepted" Or status.SelectedItem.ToString() = "Denied" Then
+            Dim decisionDateValue As Date = decisionDate.Value
+            Dim decisionDateUpdate As String = $"UPDATE Proposals SET Decision_Date = TO_DATE('{decisionDateValue:yyyy-MM-dd}', 'YYYY-MM-DD') WHERE Proposal_No = '{originalValues("Proposal_No")}'"
+            updateStatements.Add(decisionDateUpdate)
+        End If
+
+        ' UPDATE Proposals and Customers
+        For Each updateStatement In updateStatements
+            DBHandler.ExecuteStatement(updateStatement)
+        Next
+
+        ' Make update statements for tasks
+        For Each row As DataGridViewRow In tasksDG.Rows
+            If Not row.IsNewRow Then
+                Dim taskID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Names = '{row.Cells(0).Value}'").ToString()
+                Dim column2Value = row.Cells(1).Value
+                Dim column3Value = row.Cells(2).Value
+
+                ' UPDATE TaskRequests
+                Dim updateStatement As String = $"UPDATE TaskRequests SET Total_SQFT = '{column2Value}', QUOTED_SQFTPrice = '{column3Value}' WHERE Task_ID = '{taskID}' AND Proposal_No = '{existingProposal}'"
+                DBHandler.ExecuteStatement(updateStatement)
+            End If
+        Next
     End Sub
 
     Private Sub SaveButton_Click(sender As Object, e As EventArgs)
-        If IsNothing(existingProposal) Then
-            SaveProposal()
+        If String.IsNullOrEmpty(existingProposal) Then
+            Try
+                SaveProposal()
+                MessageBox.Show("Proposal saved successfully.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                CancelButton_Click(nothing, nothing)
+            Catch ex As Exception
+                MessageBox.Show($"An error occurred while saving the proposal: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         Else
-            MessageBox.Show("Editing existing proposals is not supported yet.")
+            Try
+                EditProposal()
+                MessageBox.Show("Proposal edited successfully.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                CancelButton_Click(nothing, nothing)
+            Catch ex As Exception
+                MessageBox.Show($"An error occurred while editing the proposal: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         End If
     End Sub
 
