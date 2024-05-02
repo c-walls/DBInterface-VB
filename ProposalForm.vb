@@ -23,7 +23,7 @@ Public Class ProposalPage
     Private dateWrittenLabel As New Label() With {.Text = "Date Written:"}
     Private status As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private statusLabel As New Label() With {.Text = "Proposal Status:"}
-    Private WithEvents decisionDate As New DateTimePicker() With {.ShowCheckBox = True, .Checked = False, .Format = DateTimePickerFormat.Custom,  .CustomFormat = "MM/dd/yyyy"}
+    Private WithEvents decisionDate As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom,  .CustomFormat = "MM/dd/yyyy"}
     Private decisionDateLabel As New Label() With {.Text = "Decision Date:"}
     Private WithEvents tasksDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
     Private Tasks_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Task", .Name = "Task"} 
@@ -40,7 +40,7 @@ Public Class ProposalPage
     Private customerTypeLabel As New Label() With {.Text = "Customer Type:"}
     Private salesperson As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private salespersonLabel As New Label() With {.Text = "Salesperson:"}
-    Private saveButton As New Button() With {.Text = "Create", .Dock = DockStyle.Top, .Margin = New Padding(0, 80, 0, 0), .Height = 40}
+    Private saveButton As New Button() With {.Text = "Save", .Dock = DockStyle.Top, .Margin = New Padding(0, 80, 0, 0), .Height = 40}
     Private cancelButton As New Button() With {.Text = "Cancel", .Dock = DockStyle.Top, .Margin = New Padding(0, 80, 0, 0), .Height = 40}
 
     Private mainFields As New List(Of Control) From {proposalNo, customerNo, estimationMethod, billingName, billingAddress, dateWritten, status, decisionDate, salesperson, locations}
@@ -150,7 +150,6 @@ Public Class ProposalPage
         Next
 
         status.Items.AddRange(New String() {"Pending", "Accepted", "Denied"})
-        status.Enabled = decisionDate.Checked
         estimationMethod.Items.AddRange(New String() {"Walk Through", "Floor Plan"})
         tasksDG.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         tasksDG.Dock = DockStyle.Fill
@@ -158,9 +157,9 @@ Public Class ProposalPage
         ' Event Handlers
         AddHandler Me.Load, AddressOf UserControl_Load
         AddHandler billingName.SelectionChangeCommitted, AddressOf billingName_SelectionChangeCommitted
-        AddHandler decisionDate.ValueChanged, AddressOf decisionDate_ValueChanged
         AddHandler tasksDG.CellEndEdit, AddressOf tasksDG_CellEndEdit
         AddHandler billingName.KeyDown, AddressOf billingName_KeyDown
+        AddHandler DecisionDate.ValueChanged, AddressOf DecisionDate_ValueChanged
         AddHandler saveButton.Click, AddressOf SaveButton_Click
         AddHandler cancelButton.Click, AddressOf CancelButton_Click
     End Sub
@@ -324,12 +323,6 @@ Public Class ProposalPage
     End Sub
 
     Private Sub decisionDate_ValueChanged(sender As Object, e As EventArgs) Handles decisionDate.ValueChanged
-        ' Allow status change only when decision date is set
-        status.Enabled = decisionDate.Checked
-        If Not decisionDate.Checked Then
-            status.SelectedIndex = 0
-        End If
-
         ' Validate decision date
         If decisionDate.Value.Date < DateWritten.Value.Date OrElse decisionDate.Value.Date > DateTime.Now.Date Then
             MessageBox.Show("Decision date invalid." & vbCrLf & vbCrLf & "Choose a date between the creation date and today.", "Invalid Date", MessageBoxButtons.OK, MessageBoxIcon.Error)
