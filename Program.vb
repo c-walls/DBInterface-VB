@@ -5,8 +5,8 @@ Imports System.Windows.Forms
 Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
-' 1. Create Homepage / Menu --> DGV with tab control and two changing buttons
-' 2. Finish Work Order Form --> Add amount to dashboard rows
+' 1. Finish Work Order Form --> Add amount to dashboard rows
+' 2. Create Secondary Work Order Routing
 ' 3. Create Work Assignment Form
 ' 4. Create Invoice Form
 ' 5. Update Styling and Test (Themes?)
@@ -20,7 +20,7 @@ Public Class MainForm
     Public Dashboard As New Dashboard() With {.Dock = DockStyle.Fill}
     Public ProposalPage As New ProposalPage() With {.Dock = DockStyle.Fill}
     Public WorkOrderPage As New WorkOrderPage() With {.Dock = DockStyle.Fill}
-    ' Private WorkAssignmentPage As New WorkAssignmentPage() With {.Dock = DockStyle.Fill}
+    Private WorkAssignmentPage As New WorkAssignmentPage() With {.Dock = DockStyle.Fill}
     ' Private InvoicePage As New InvoicePage() With {.Dock = DockStyle.Fill}
     Private Panel As New Panel() With {.Dock = DockStyle.Fill}
 

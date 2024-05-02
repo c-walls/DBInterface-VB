@@ -82,9 +82,9 @@ Public Class Dashboard
                                                                     WHERE Prop_Status = 'Accepted'
                                                                     GROUP BY Cust_BillName, Proposals.Proposal_No, Prop_Status, WorkOrders.Proposal_No")
         Case "Work Assignments"
-            button1.Text = "Plan Work Order"
-            button2.Text = "Edit Work Order"
-            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT * FROM WorkAssignments")
+            button1.Text = "Schedule Work"
+            button2.Text = "Update Assignment"
+            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT WorkOrders.Order_No, Location_Name, Location_Address, Required_Date, CASE WHEN WorkAssignments.Order_No IS NULL THEN 'No' ELSE 'Yes' END AS Assigned FROM WorkOrders LEFT JOIN WorkAssignments ON WorkOrders.Order_No = WorkAssignments.Order_No")
         Case "Invoices"
             button1.Text = "Button 1"
             button2.Text = "Button 2"
@@ -107,8 +107,10 @@ Public Class Dashboard
                     Me.Parent.Controls.Add(workOrderForm)
                     Me.Parent.Controls.Remove(Me)
                 Case "Work Assignments"
-                    ' Perform action for "Work Assignments" tab
-                    messagebox.Show($"Selected row index in Work Assignments tab: {rowIndex}")
+                    Dim workAssignmentForm As New WorkAssignmentPage() With {.Dock = DockStyle.Fill}
+                    WorkAssignmentPage.selectedOrder = dashboardDGV.Rows(rowIndex).Cells(1).Value.ToString()
+                    Me.Parent.Controls.Add(workAssignmentForm)
+                    Me.Parent.Controls.Remove(Me)
                 Case "Invoices"
                     ' Perform action for "Invoices" tab
                     messagebox.Show($"Selected row index in Invoices tab: {rowIndex}")

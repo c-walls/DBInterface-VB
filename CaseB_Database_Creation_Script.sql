@@ -12,6 +12,7 @@ DROP TABLE Customers;
 DROP TABLE Employees;
 DROP SEQUENCE customer_seq;
 DROP SEQUENCE proposal_seq;
+DROP SEQUENCE assign_seq;
 
 
 CREATE TABLE Employees (
@@ -138,6 +139,14 @@ CONSTRAINT FKWorkAssignments_Supervisor FOREIGN KEY (Supervisor_ID) REFERENCES E
 CONSTRAINT PosVehicle CHECK (Vehicle_No >= 0)
 );
 
+CREATE SEQUENCE assign_seq START WITH 1 INCREMENT BY 1;
+CREATE OR REPLACE TRIGGER assignment_auto_increment
+BEFORE INSERT ON WorkAssignments 
+FOR EACH ROW
+BEGIN
+    SELECT 'A' || TO_CHAR(assign_seq.NEXTVAL, 'FM00000') INTO :new.Assignment_No FROM dual;
+END;
+/
 
 CREATE TABLE Invoices (
     Invoice_No CHAR(6),
@@ -401,6 +410,7 @@ VALUES ('W00004-01', 'P00004', 'Oakland Transit Authority', '789 Capitol Ave, Wa
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
 VALUES ('W00004-02', 'P00004', 'Oakland Transit Annex', '789 Capitol Ave, Washington, DC 20001', TO_DATE('2024-04-01', 'YYYY-MM-DD'), '', 'E001');
 
+
 -- INSERT TASKORDER DATA --
 INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete)
 VALUES ('T001', 'W00001-01', 500, 10, 'Completed', TO_DATE('2024-04-05', 'YYYY-MM-DD'));
@@ -426,10 +436,10 @@ VALUES ('T005', 'W00004-01', 450, 9, 'Pending');
 
 -- INSERT WORK ASSIGNMENT DATA --
 INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
-VALUES ('A00001', 'W00001-01', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 101);
+VALUES ('A00001', 'W00001-01', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 1);
 
 INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
-VALUES ('A00002', 'W00001-02', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 101);
+VALUES ('A00002', 'W00001-02', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 1);
 
 
 -- INSERT MATERIAL ASSIGNMENT DATA --
