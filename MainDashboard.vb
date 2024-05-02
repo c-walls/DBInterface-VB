@@ -83,14 +83,14 @@ Public Class Dashboard
         Case "Work Orders"
             button1.Text = "Edit Work Order"
             button2.Text = "Create Work Order"
-            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT Cust_BillName As Customer, Proposals.Proposal_No As Proposal, Prop_Status As Status,
+            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT Cust_BillName As Customer, Proposals.Proposal_No As Proposal, Location_QTY, Prop_Status As Status,
                                                                   CASE WHEN WorkOrders.Proposal_No IS NULL THEN 'No' ELSE 'Yes' END AS Planned,
                                                                   '$ ' || SUM(taskRequests.Total_SQFT * taskRequests.Quoted_SQFTPrice) AS Total
                                                                   FROM Customers JOIN Proposals ON Customers.Cust_No = Proposals.Cust_No 
                                                                   LEFT JOIN WorkOrders ON Proposals.Proposal_No = WorkOrders.Proposal_No 
                                                                   LEFT JOIN taskRequests ON Proposals.Proposal_No = taskRequests.Proposal_No
                                                                   WHERE Prop_Status = 'Accepted' OR Prop_Status = 'Pending'
-                                                                  GROUP BY Cust_BillName, Proposals.Proposal_No, Prop_Status, WorkOrders.Proposal_No ORDER BY Prop_Status ASC")
+                                                                  GROUP BY Cust_BillName, Proposals.Proposal_No, Location_QTY, Prop_Status, WorkOrders.Proposal_No ORDER BY Prop_Status ASC")
         Case "Work Assignments"
             button1.Text = "Schedule Work"
             button2.Text = "Update Assignment"
@@ -120,9 +120,18 @@ Public Class Dashboard
                     Me.Parent.Controls.Add(New ProposalPage() With {.Dock = DockStyle.Fill})
                     Me.Parent.Controls.Remove(Me)
                 Case "Work Orders"
-                    Dim workOrderForm As New WorkOrderPage() With {.Dock = DockStyle.Fill}
-                    WorkOrderPage.selectedProposal = dashboardDGV.Rows(rowIndex).Cells(1).Value.ToString()
-                    Me.Parent.Controls.Add(workOrderForm)
+                    Dim selectedProposal = dashboardDGV.Rows(rowIndex).Cells(1).Value.ToString()
+                    Dim locationQTY = dashboardDGV.Rows(rowIndex).Cells(2).Value.ToString()
+                    WorkOrderPage.selectedProposal = selectedProposal
+
+                    ' Create a new instance of WorkOrderControl for each location
+                    For i As Integer = 1 To locationQTY
+                        ' Create a new instance of WorkOrderControl
+                        Dim generatedWorkOrder = "W" & selectedProposal.Substring(2, 4) & "-" & i.ToString("D2")
+                        Dim workOrderControl As New WorkOrderPage(generatedWorkOrder) With {.Dock = DockStyle.Fill}
+                        Me.Parent.Controls.Add(workOrderControl)
+                    Next
+
                     Me.Parent.Controls.Remove(Me)
                 Case "Work Assignments"
                     Dim workAssignmentForm As New WorkAssignmentPage() With {.Dock = DockStyle.Fill}

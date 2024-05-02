@@ -18,10 +18,6 @@ Public Class MainForm
     Dim screenWidth As Integer = Me.Size.Width
     Dim screenHeight As Integer = Me.Size.Height
     Public Dashboard As New Dashboard() With {.Dock = DockStyle.Fill}
-    Public ProposalPage As New ProposalPage() With {.Dock = DockStyle.Fill}
-    Public WorkOrderPage As New WorkOrderPage() With {.Dock = DockStyle.Fill}
-    Private WorkAssignmentPage As New WorkAssignmentPage() With {.Dock = DockStyle.Fill}
-    ' Private InvoicePage As New InvoicePage() With {.Dock = DockStyle.Fill}
     Private Panel As New Panel() With {.Dock = DockStyle.Fill}
 
     Public Sub New()

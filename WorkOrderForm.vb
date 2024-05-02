@@ -30,18 +30,30 @@ Public Class WorkOrderPage
     Private taskOrder_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Task", .Name = "Task"}
 
     Public Shared selectedProposal As String
+    Public Property generatedWorkOrder As String
     Private mainFields As Control() = {workOrderNo, proposalNo, workLocationName, workLocationAddress, workOrderDate, workOrderNotes, manager, dateRequired}
     Private mainLabels As Label() = {workOrderNoLabel, proposalNoLabel, workLocationLabel, workLocationNameLabel, workLocationAddressLabel, workOrderDateLabel, workOrderNotesLabel, managerLabel, dateRequiredLabel}
 
 
-    Public Sub New()
+    Public Sub New(generatedWorkOrder As String)
+        Me.generatedWorkOrder = generatedWorkOrder
+
         Dim headerLabel As New Label() With {
-            .Text = "Work Order Form",
             .Dock = DockStyle.Top,
             .Font = New Font("Arial", 24, FontStyle.Bold),
             .TextAlign = ContentAlignment.MiddleCenter,
             .Height = 50}
         Me.Controls.Add(headerLabel)
+
+        Try
+            If generatedWorkOrder.EndsWith("01") Then
+                headerLabel.Text = "Primary Work Order"
+            Else
+                headerLabel.Text = "Secondary Work Order"
+            End If
+        Catch ex As Exception
+            MessageBox.Show("Error: " & ex.Message & vbCrLf & "generatedWorkOrder: " & generatedWorkOrder, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
 
         ' Configure TableLayoutPanel
         Dim tableLayoutPanel As New TableLayoutPanel()
@@ -126,7 +138,7 @@ Public Class WorkOrderPage
         PopulateManagersList()
         PopulateTasksList()
         proposalNo.Text = selectedProposal
-        workOrderNo.Text = "W" & proposalNo.Text.Substring(2, 4) & "-01"
+        workOrderNo.Text = generatedWorkOrder
         workLocationAddress.Size = New Size(200, 35)
         workOrderNotes.Size = New Size(200, 35)
     End Sub
