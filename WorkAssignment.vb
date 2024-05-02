@@ -32,8 +32,10 @@ Public Class WorkAssignmentPage
 
     Private WithEvents materialAssignDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
     Private materialTask_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Task", .Name = "Task"}
+    Private materialTask_Label As New Label() With {.Text = "Material Assignments:"}
     Private WithEvents laborAssignDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
     Private laborTask_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Task", .Name = "Task"}
+    Private laborTask_Label As New Label() With {.Text = "Labor Assignments:"}
 
     Public Shared selectedOrder As String
     Private mainFields As Control() = {assignmentNo, workOrderNo, workLocationName, workLocationAddress, startDate, endDate, vehicleNo, supervisor, authorizer, authDate}
@@ -58,7 +60,7 @@ Public Class WorkAssignmentPage
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 14))
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 18))
         tableLayoutPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 25))
-        tableLayoutPanel.RowCount = 12
+        tableLayoutPanel.RowCount = 14
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2))
@@ -67,14 +69,17 @@ Public Class WorkAssignmentPage
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 2))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 5))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 20))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 5))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 20))
         tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 6))
-        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 27))
+        tableLayoutPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 17))
         Me.Controls.Add(tableLayoutPanel)
 
         ' Configure material DataGridView
         materialAssignDG.Margin = New Padding(200, 40, 200, 10)
+        tableLayoutPanel.SetColumnSpan(materialTask_Label, 5)
         tableLayoutPanel.SetColumnSpan(materialAssignDG, 5)
         materialAssignDG.Columns.Insert(0, materialTask_DGColumn)
         materialAssignDG.Columns.Add("Material", "Material")
@@ -86,6 +91,7 @@ Public Class WorkAssignmentPage
 
         ' Configure labor DataGridView
         laborAssignDG.Margin = New Padding(200, 40, 200, 10)
+        tableLayoutPanel.SetColumnSpan(laborTask_Label, 5)
         tableLayoutPanel.SetColumnSpan(laborAssignDG, 5)
         laborAssignDG.Columns.Insert(0, laborTask_DGColumn)
         laborAssignDG.Columns.Add("Employee", "Employee")
@@ -130,14 +136,16 @@ Public Class WorkAssignmentPage
         tableLayoutPanel.Controls.Add(endDate, 4, 3)
         tableLayoutPanel.Controls.Add(vehicleNoLabel, 3, 7)
         tableLayoutPanel.Controls.Add(vehicleNo, 4, 7)
-        tableLayoutPanel.Controls.Add(materialAssignDG, 0, 8)
-        tableLayoutPanel.Controls.Add(laborAssignDG, 0, 9)
-        tableLayoutPanel.Controls.Add(authorizerLabel, 0, 10)
-        tableLayoutPanel.Controls.Add(authorizer, 1, 10)
-        tableLayoutPanel.Controls.Add(authDateLabel, 3, 10)
-        tableLayoutPanel.Controls.Add(authDate, 4, 10)
-        tableLayoutPanel.Controls.Add(SaveButton, 1, 11)
-        tableLayoutPanel.Controls.Add(CancelButton, 3, 11)
+        tableLayoutPanel.Controls.Add(materialTask_Label, 0, 8)
+        tableLayoutPanel.Controls.Add(materialAssignDG, 0, 9)
+        tableLayoutPanel.Controls.Add(laborTask_Label, 0, 10)
+        tableLayoutPanel.Controls.Add(laborAssignDG, 0, 11)
+        tableLayoutPanel.Controls.Add(authorizerLabel, 0, 12)
+        tableLayoutPanel.Controls.Add(authorizer, 1, 12)
+        tableLayoutPanel.Controls.Add(authDateLabel, 3, 12)
+        tableLayoutPanel.Controls.Add(authDate, 4, 12)
+        tableLayoutPanel.Controls.Add(SaveButton, 1, 13)
+        tableLayoutPanel.Controls.Add(CancelButton, 3, 13)
 
 
         AddHandler Me.Load, AddressOf WorkOrderPage_Load
