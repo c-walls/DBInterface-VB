@@ -5,13 +5,15 @@ Imports System.Windows.Forms
 Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
-' 1. Finish Work Order Form --> Add amount to dashboard rows
-' 2. Create Secondary Work Order Routing
-' 3. Create Work Assignment Form
+' 1. Work Order Form --> Primary to Secondary
+' 2. Work Assignment --> Add "Assigned To" vs existing to > "In Progress?" 
+' 3. Work Assignment Form -->
 ' 4. Create Invoice Form
-' 5. Update Styling and Test (Themes?)
-' 6. Proposal Form --> Add Column before customer name with gap and label (Also "New Customer Toggle")
-' 7. Proposal Form --> Add Confirmation message and/or clear form after submission (Also add commit SQL statement)
+' 5. Proposal Form --> Add Column before customer name with gap and label
+' 6. Proposal Form --> Add "New Customer" Toggle * Fix address Height
+' 7. Proposal Form --> Editing Functionality
+' 8. Add SQL Commits
+' 9. Add WinForms Themes?
 
 Public Class MainForm
     Inherits Form

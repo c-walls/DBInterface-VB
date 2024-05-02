@@ -157,7 +157,7 @@ Public Class ProposalPage
         AddHandler billingName.SelectionChangeCommitted, AddressOf billingName_SelectionChangeCommitted
         AddHandler decisionDate.ValueChanged, AddressOf decisionDate_ValueChanged
         AddHandler tasksDG.CellEndEdit, AddressOf tasksDG_CellEndEdit
-        AddHandler BillingName.KeyDown, AddressOf billingName_KeyDown
+        AddHandler billingName.KeyDown, AddressOf billingName_KeyDown
         AddHandler saveButton.Click, AddressOf SaveButton_Click
         AddHandler cancelButton.Click, AddressOf CancelButton_Click
     End Sub
@@ -170,7 +170,7 @@ Public Class ProposalPage
         Status.SelectedIndex = 0
         locations.Value = 1
         DateWritten.Value = DateTime.Now
-        BillingName.Select()
+        billingName.Select()
     End Sub
 
     Private Sub PopulateCustomerList()
@@ -280,6 +280,9 @@ Public Class ProposalPage
                 End If
             End If
         Next
+
+        MessageBox.Show("Proposal created successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        CancelButton_Click(nothing, nothing)
     End Sub
 
     Private Sub billingName_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles billingName.SelectionChangeCommitted
