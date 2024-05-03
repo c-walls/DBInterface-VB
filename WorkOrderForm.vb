@@ -23,7 +23,7 @@ Public Class WorkOrderPage
     Private managerLabel As New Label() With {.Text = "Manager:"}
     Private withEvents dateRequired As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = " "}
     Private dateRequiredLabel As New Label() With {.Text = "Date Required:"}
-    Private WithEvents SaveButton As New Button() With {.Text = "Create", .Dock = DockStyle.Top, .Margin = New Padding(0, 120, 0, 0), .Height = 40}
+    Private WithEvents SaveButton As New Button() With {.Text = "Save", .Dock = DockStyle.Top, .Margin = New Padding(0, 120, 0, 0), .Height = 40}
     Private WithEvents CancelButton As New Button() With {.Text = "Cancel", .Dock = DockStyle.Top, .Margin = New Padding(0, 120, 0, 0), .Height = 40}
 
     Private WithEvents taskOrderDG As New DataGridView() With {.Anchor = AnchorStyles.Left}

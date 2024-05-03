@@ -77,29 +77,29 @@ Public Class Dashboard
             button2.Text = "Edit Proposal"
             button3.Text = "Create Work Order"
             dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT Proposals.Proposal_No As Proposal, Cust_BillName As Customer, Location_QTY, 
-                                                                  '$ ' || SUM(taskRequests.Total_SQFT * taskRequests.Quoted_SQFTPrice) AS Total, 
-                                                                  Prop_Date As Created, Emp_Name As Salesperson, Prop_Status As Status,
-                                                                  CASE WHEN Prop_Status = 'Accepted' THEN (CASE WHEN WorkOrders.Proposal_No IS NULL THEN 'No' ELSE 'Yes' END) ELSE '-' END AS Planned
-                                                                  FROM Customers JOIN Proposals ON Customers.Cust_No = Proposals.Cust_No 
-                                                                  INNER JOIN Employees ON Proposals.Salesperson_ID = Employees.Emp_ID 
-                                                                  LEFT JOIN WorkOrders ON Proposals.Proposal_No = WorkOrders.Proposal_No 
-                                                                  LEFT JOIN taskRequests ON Proposals.Proposal_No = taskRequests.Proposal_No
-                                                                  WHERE Prop_Status = 'Accepted' OR Prop_Status = 'Pending'
-                                                                  GROUP BY Proposals.Proposal_No, Cust_BillName, Location_QTY, Prop_Date, Emp_Name, Prop_Status, WorkOrders.Proposal_No 
-                                                                  ORDER BY CASE WHEN Planned = 'No' THEN 1 WHEN Planned = 'Yes' THEN 2 ELSE 3 END, Prop_Date DESC")
+                                                                    '$ ' || SUM(taskRequests.Total_SQFT * taskRequests.Quoted_SQFTPrice) AS Total, 
+                                                                    Prop_Date As Created, Emp_Name As Salesperson, Prop_Status As Status
+                                                                    FROM Customers JOIN Proposals ON Customers.Cust_No = Proposals.Cust_No 
+                                                                    INNER JOIN Employees ON Proposals.Salesperson_ID = Employees.Emp_ID 
+                                                                    LEFT JOIN taskRequests ON Proposals.Proposal_No = taskRequests.Proposal_No
+                                                                    WHERE (Prop_Status = 'Accepted' OR Prop_Status = 'Pending') 
+                                                                    AND Proposals.Proposal_No NOT IN (SELECT Proposal_No FROM WorkOrders)
+                                                                    GROUP BY Proposals.Proposal_No, Cust_BillName, Location_QTY, Prop_Date, Emp_Name, Prop_Status
+                                                                    ORDER BY CASE Prop_Status WHEN 'Accepted' THEN 1 WHEN 'Pending' THEN 2 ELSE 3 END, Prop_Date DESC")
         Case "Work Orders"
             button1.Text = "Update Work Order"
             button2.Text = "Schedule Work Assignment"
             button3.Text = "Update Work Assignment"
-            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT WorkOrders.Order_No, Location_Name As Location, Location_Address As Address, Required_Date As Deadline,
-                                                        LastAssignments.Assignment_No As Last_Assignment,
-                                                        CASE WHEN LastAssignments.Assignment_No IS NOT NULL AND LastAssignments.Finish_Date IS NULL THEN 'In progress'
-                                                            WHEN LastAssignments.Assignment_No IS NULL AND LastAssignments.Finish_Date IS NULL THEN ''
-                                                            ELSE 'Closed - ' || TO_CHAR(LastAssignments.Finish_Date, 'MM/DD/YYYY') END As Assignment_Status
-                                                        FROM WorkOrders 
-                                                        LEFT JOIN (SELECT Order_No, Assignment_No, Finish_Date, ROW_NUMBER() OVER (PARTITION BY Order_No ORDER BY Assignment_No DESC) AS rn
-                                                                 FROM WorkAssignments) LastAssignments ON WorkOrders.Order_No = LastAssignments.Order_No AND LastAssignments.rn = 1
-                                                        WHERE WorkOrders.Order_No IN (SELECT Order_No FROM TaskOrders WHERE Date_Complete IS NULL)")
+            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT WorkOrders.Order_No, Location_Name As Location, Location_Address As Address, Employees.Emp_Name AS Manager, Required_Date As Deadline,
+                                                                    LastAssignments.Assignment_No As Last_Assignment,
+                                                                    CASE WHEN LastAssignments.Assignment_No IS NOT NULL AND LastAssignments.Finish_Date IS NULL THEN 'In progress'
+                                                                        WHEN LastAssignments.Assignment_No IS NULL AND LastAssignments.Finish_Date IS NULL THEN ''
+                                                                        ELSE 'Closed - ' || TO_CHAR(LastAssignments.Finish_Date, 'MM/DD/YYYY') END As Assignment_Status
+                                                                    FROM WorkOrders 
+                                                                    LEFT JOIN Employees ON WorkOrders.Manager_ID = Employees.Emp_ID
+                                                                    LEFT JOIN (SELECT Order_No, Assignment_No, Finish_Date, ROW_NUMBER() OVER (PARTITION BY Order_No ORDER BY Assignment_No DESC) AS rn
+                                                                             FROM WorkAssignments) LastAssignments ON WorkOrders.Order_No = LastAssignments.Order_No AND LastAssignments.rn = 1
+                                                                    WHERE WorkOrders.Order_No IN (SELECT Order_No FROM TaskOrders WHERE Date_Complete IS NULL)")
 
         Case "Invoices"
             button1.Text = "Prepare Invoice"
