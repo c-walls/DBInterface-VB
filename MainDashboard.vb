@@ -145,8 +145,8 @@ Public Class Dashboard
                     Me.Parent.Controls.Add(proposalPage)
                     Me.Parent.Controls.Remove(Me)
                 Case "Work Orders" ' -- SCHEDULE WORK ASSIGNMENT --
-                    Dim workAssignmentForm As New WorkAssignmentPage() With {.Dock = DockStyle.Fill}
-                    WorkAssignmentPage.selectedOrder = dashboardDGV.Rows(rowIndex).Cells(0).Value.ToString()
+                    Dim selectedOrder = dashboardDGV.Rows(rowIndex).Cells(0).Value.ToString()
+                    Dim workAssignmentForm As New WorkAssignmentPage(selectedOrder) With {.Dock = DockStyle.Fill}
                     Me.Parent.Controls.Add(workAssignmentForm)
                     Me.Parent.Controls.Remove(Me)
                 Case "Invoices" ' -- EDIT INVOICE --
@@ -173,9 +173,7 @@ Public Class Dashboard
                         Dim workOrderControl As New WorkOrderPage(selectedProposal, generatedWorkOrder, selectedWorkOrder) With {.Dock = DockStyle.Fill}
                         Me.Parent.Controls.Add(workOrderControl)
                     Next
-
                     Me.Parent.Controls.Remove(Me)
-
                 Case "Work Orders" ' -- UPDATE WORK ASSIGNMENT --
 
                 Case "Invoices" ' -- PRINT INVOICE --

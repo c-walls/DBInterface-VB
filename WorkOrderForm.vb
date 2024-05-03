@@ -292,8 +292,6 @@ Public Class WorkOrderPage
         CancelButton_Click(nothing, nothing)
     End Sub
 
-
-
     Private Sub SaveButton_Click(sender As Object, e As EventArgs)
         If String.IsNullOrEmpty(selectedWorkOrder) Then
             SaveWorkOrder()

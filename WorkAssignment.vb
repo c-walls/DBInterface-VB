@@ -17,7 +17,7 @@ Public Class WorkAssignmentPage
     Private workLocationAddressLabel As New Label() With {.Text = "Address:"}
     Private startDate As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = "MM/dd/yyyy"}
     Private startDateLabel As New Label() With {.Text = "Start Date:"}
-    Private WithEvents endDate As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = " ", .ShowCheckBox = True, .Checked = False}
+    Private WithEvents endDate As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = " ", .Enabled = False}
     Private endDateLabel As New Label() With {.Text = "End Date:"}
     Private vehicleNo As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private vehicleNoLabel As New Label() With {.Text = "Vehicle Number:"}
@@ -27,7 +27,7 @@ Public Class WorkAssignmentPage
     Private authorizerLabel As New Label() With {.Text = "Authorized By:"}
     Private withEvents authDate As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = "MM/dd/yyyy"}
     Private authDateLabel As New Label() With {.Text = "Authorization Date:"}
-    Private WithEvents SaveButton As New Button() With {.Text = "Create", .Dock = DockStyle.Top, .Margin = New Padding(0, 80, 0, 0), .Height = 40}
+    Private WithEvents SaveButton As New Button() With {.Text = "Save", .Dock = DockStyle.Top, .Margin = New Padding(0, 80, 0, 0), .Height = 40}
     Private WithEvents CancelButton As New Button() With {.Text = "Cancel", .Dock = DockStyle.Top, .Margin = New Padding(0, 80, 0, 0), .Height = 40}
     Private WithEvents materialAssignDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
     Private materialTask_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Task", .Name = "Task"}
@@ -38,12 +38,14 @@ Public Class WorkAssignmentPage
     Private laborEmp_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Employee", .Name = "Employee"}
     Private laborTask_Label As New Label() With {.Text = "Labor Assignments:", .Anchor = AnchorStyles.Bottom Or AnchorStyles.None, .AutoSize = True, .Font = New Font("Arial", 12, FontStyle.Bold)}
 
-    Public Shared selectedOrder As String
+    Public Property selectedOrder As String
     Private mainFields As Control() = {assignmentNo, workOrderNo, workLocationName, workLocationAddress, startDate, endDate, vehicleNo, supervisor, authorizer, authDate}
     Private mainLabels As Label() = {assignmentNoLabel, workOrderNoLabel, workLocationLabel, workLocationNameLabel, workLocationAddressLabel, startDateLabel, endDateLabel, vehicleNoLabel, supervisorLabel, authorizerLabel, authDateLabel}
 
 
-    Public Sub New()
+    Public Sub New(ByVal selectedOrder As String)
+        Me.selectedOrder = selectedOrder
+
         Dim headerLabel As New Label() With {
             .Text = "Work Assignment Form",
             .Dock = DockStyle.Top,
@@ -88,6 +90,7 @@ Public Class WorkAssignmentPage
         materialAssignDG.Columns.Add("qtySent", "Quantity Sent")
         materialAssignDG.Columns.Add("qtyUsed", "Quantity Used")
         materialAssignDG.Columns(2).ReadOnly = True
+        materialAssignDG.Columns(2).DefaultCellStyle.Format = "C2"
         materialAssignDG.Rows.Add(3)
 
         ' Configure labor DataGridView
@@ -99,8 +102,8 @@ Public Class WorkAssignmentPage
         laborAssignDG.Columns.Add("Rate", "Rate")
         laborAssignDG.Columns.Add("HoursEst", "Hours Estimated")
         laborAssignDG.Columns.Add("HrsUsed", "Hours Used")
-        laborAssignDG.Columns(2).ReadOnly = True
         laborAssignDG.Rows.Add(3)
+        laborAssignDG.Columns(2).DefaultCellStyle.Format = "C2"
 
         For Each control As Control In mainFields
             control.Width = 200
@@ -175,7 +178,7 @@ Public Class WorkAssignmentPage
     Private Sub PopulateDGVLists()
         Dim dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Task_Names FROM Tasks WHERE Task_ID IN (SELECT Task_ID FROM TaskOrders WHERE Order_No = '" & selectedOrder & "')")
         Dim dataTable2 As DataTable = DBHandler.ExecuteTableQuery("SELECT Material_Name FROM Materials")
-        Dim dataTable3 As DataTable = DBHandler.ExecuteTableQuery("SELECT Emp_Name FROM Employees WHERE Emp_Role = 'Crew Member' OR Emp_Role = 'Crew Supervisor'")
+        Dim dataTable3 As DataTable = DBHandler.ExecuteTableQuery("SELECT Emp_Name FROM Employees WHERE Emp_Role = 'Worker' OR Emp_Role = 'Crew Supervisor'")
 
         materialTask_DGColumn.DataSource = dataTable
         materialTask_DGColumn.DisplayMember = "Task_Names"
@@ -217,84 +220,97 @@ Public Class WorkAssignmentPage
     End Sub
 
     Private Sub materialAssignDG_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles materialAssignDG.CellEndEdit
-        ' Dim value As String = If(taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value IsNot Nothing, taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value.ToString(), 0)
-        ' Dim selectedTask As String = If(taskOrderDG.Rows(e.RowIndex).Cells(0).Value IsNot Nothing, taskOrderDG.Rows(e.RowIndex).Cells(0).Value.ToString(), String.Empty)
-        ' Dim maxSQFT As Integer = DBHandler.ExecuteValueQuery("SELECT Total_SQFT FROM TaskRequests WHERE Proposal_No = '" & selectedProposal & "' AND Task_ID IN (SELECT Task_ID FROM Tasks WHERE Task_Names = '" & selectedTask & "')")
+        Dim value As String = If(materialAssignDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value IsNot Nothing, materialAssignDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value.ToString(), 0)
     
-        ' If (e.ColumnIndex = 1 Or e.ColumnIndex = 2) And Not IsNumeric(value) Then
-        '     taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value = Nothing
-        ' End If
+        If (e.ColumnIndex = 2 Or e.ColumnIndex = 3 Or e.ColumnIndex = 4) And Not IsNumeric(value) Then
+            materialAssignDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value = Nothing
+        End If
         
         If e.ColumnIndex = 1 Then
             materialAssignDG.Rows(e.RowIndex).Cells(2).Value = DBHandler.ExecuteValueQuery("SELECT Material_UnitCost FROM Materials WHERE Material_Name = '" & materialAssignDG.Rows(e.RowIndex).Cells(1).Value & "'")
         End If
 
-        ' If e.ColumnIndex = 0 Then
-        '     taskOrderDG.Rows(e.RowIndex).Cells(3).Value = "--"
-        '     taskOrderDG.Rows(e.RowIndex).Cells(4).Value = "--"
-        ' End If
+        If e.ColumnIndex = 0 Then
+            materialAssignDG.Rows(e.RowIndex).Cells(4).Value = "--"
+        End If
     End Sub
 
-        Private Sub laborAssignDG_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles laborAssignDG.CellEndEdit
-        ' Dim value As String = If(taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value IsNot Nothing, taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value.ToString(), 0)
-        ' Dim selectedTask As String = If(taskOrderDG.Rows(e.RowIndex).Cells(0).Value IsNot Nothing, taskOrderDG.Rows(e.RowIndex).Cells(0).Value.ToString(), String.Empty)
-        ' Dim maxSQFT As Integer = DBHandler.ExecuteValueQuery("SELECT Total_SQFT FROM TaskRequests WHERE Proposal_No = '" & selectedProposal & "' AND Task_ID IN (SELECT Task_ID FROM Tasks WHERE Task_Names = '" & selectedTask & "')")
-    
-        ' If (e.ColumnIndex = 1 Or e.ColumnIndex = 2) And Not IsNumeric(value) Then
-        '     taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value = Nothing
-        ' End If
-        
-        If e.ColumnIndex = 1 Then
-            laborAssignDG.Rows(e.RowIndex).Cells(2).Value = DBHandler.ExecuteValueQuery("SELECT Emp_Rate FROM Employees WHERE Emp_Name = '" & laborAssignDG.Rows(e.RowIndex).Cells(1).Value & "'")
+    Private Sub laborAssignDG_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles laborAssignDG.CellEndEdit
+        Dim value As String = If(laborAssignDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value IsNot Nothing, laborAssignDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value.ToString(), 0)
+            
+        If (e.ColumnIndex = 2 Or e.ColumnIndex = 3 Or e.ColumnIndex = 4) And Not IsNumeric(value) Then
+            laborAssignDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value = Nothing
         End If
         
-        ' If e.ColumnIndex = 0 Then
-        '     taskOrderDG.Rows(e.RowIndex).Cells(3).Value = "--"
-        '     taskOrderDG.Rows(e.RowIndex).Cells(4).Value = "--"
-        ' End If
+        If e.ColumnIndex = 0 Then
+            laborAssignDG.Rows(e.RowIndex).Cells(4).Value = "--"
+        End If
     End Sub
 
     Private Sub SaveWorkAssignment()
-        ' Dim orderNo As String = workOrderNo.Text
-        ' Dim locationName As String = workLocationName.Text
-        ' Dim locationAddress As String = workLocationAddress.Text
-        ' Dim requiredDate As String = dateRequired.Value.ToString("yyyy-MM-dd")
-        ' Dim orderNotes As String = If(String.IsNullOrEmpty(workOrderNotes.Text), String.Empty, workOrderNotes.Text)
-        ' Dim managerID As String = DBHandler.ExecuteValueQuery($"SELECT Emp_ID FROM Employees WHERE Emp_Name = '{manager.Text}'")
+        Dim Assignment_No As String = assignmentNo.Text
+        Dim Order_No As String = workOrderNo.Text
+        Dim Start_Date As String = startDate.Value.ToString("yyyy-MM-dd")
+        Dim Authorized_Date As String = authDate.Value.ToString("yyyy-MM-dd")
+        Dim Authorizer_ID As String = DBHandler.ExecuteValueQuery("SELECT Emp_ID FROM Employees WHERE Emp_Name = '" & authorizer.SelectedValue & "'")
+        Dim Supervisor_ID As String = DBHandler.ExecuteValueQuery("SELECT Emp_ID FROM Employees WHERE Emp_Name = '" & supervisor.SelectedValue & "'")
+        Dim Vehicle_No As String = vehicleNo.SelectedItem.ToString()
 
-        ' ' INSERT INTO WorkOrders
-        ' Dim insertWorkOrderStatement As String = $"INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID) VALUES ('{orderNo}', '{selectedProposal}', '{locationName}', '{locationAddress}', TO_DATE('{requiredDate}', 'YYYY-MM-DD'), '{orderNotes}', '{managerID}')"
-        ' DBHandler.ExecuteStatement(insertWorkOrderStatement)
+        ' INSERT INTO WorkAssignments
+        Dim insertWorkAssignmentStatement As String = $"INSERT INTO WorkAssignments (Assignment_No, Order_No, Start_Date, Vehicle_No, Supervisor_ID, Authorizer_ID, Authorized_Date) 
+                                                      VALUES ('{Assignment_No}', '{Order_No}', TO_DATE('{Start_Date}', 'YYYY-MM-DD'), '{Vehicle_No}', '{Supervisor_ID}', '{Authorizer_ID}', TO_DATE('{Authorized_Date}', 'YYYY-MM-DD'))"
+        DBHandler.ExecuteStatement(insertWorkAssignmentStatement)
 
-        ' ' INSERT INTO TaskOrders
-        ' For Each row As DataGridViewRow In taskOrderDG.Rows
-        '     If row.Cells(0).Value IsNot Nothing AndAlso row.Cells(1).Value IsNot Nothing AndAlso row.Cells(2).Value IsNot Nothing Then
-        '         Dim taskName As String = row.Cells(0).Value.ToString()
-        '         Dim taskID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Names = '{taskName}'")
-        '         Dim sqft As Integer = row.Cells(1).Value
-        '         Dim estHours As Integer = row.Cells(2).Value
-        '         Dim status As String = "Pending"
-        '         row.Cells(3).Value = status
-        '         Dim statement As String = $"INSERT INTO TaskOrders (Order_No, Task_ID, Task_SQFT, Est_Duration, Task_Status) 
-        '                                     VALUES ('{workOrderNo.Text}', '{taskID}', {sqft}, {estHours}, '{status}')"
-        '         DBHandler.ExecuteStatement(statement)
-        '     End If
-        ' Next
+        ' INSERT INTO MaterialAssignments
+        For Each row As DataGridViewRow In materialAssignDG.Rows
+            If row.Cells(0).Value IsNot Nothing AndAlso row.Cells(1).Value IsNot Nothing AndAlso row.Cells(2).Value IsNot Nothing AndAlso row.Cells(3).Value IsNot Nothing AndAlso row.Cells(4).Value IsNot Nothing Then
+                Dim taskName As String = row.Cells(0).Value.ToString()
+                Dim taskID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Names = '{taskName}'")
+                Dim materialName As String = row.Cells(1).Value.ToString()
+                Dim materialID As String = DBHandler.ExecuteValueQuery($"SELECT Material_ID FROM Materials WHERE Material_Name = '{materialName}'")
+                Dim qtySent As Integer = row.Cells(3).Value
+                Dim statement As String = $"INSERT INTO MaterialAssignments (Assignment_No, Task_ID, Material_ID, Material_Sent) 
+                                           VALUES ('{Assignment_No}', '{taskID}', '{materialID}', {qtySent})"
+                DBHandler.ExecuteStatement(statement)
+            End If
+        Next
 
-        ' MessageBox.Show("Work Order created successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-        ' CancelButton_Click(nothing, nothing)
+        ' INSERT INTO LaborAssignments
+        For Each row As DataGridViewRow In laborAssignDG.Rows
+            If row.Cells(0).Value IsNot Nothing AndAlso row.Cells(1).Value IsNot Nothing AndAlso row.Cells(2).Value IsNot Nothing AndAlso row.Cells(3).Value IsNot Nothing AndAlso row.Cells(4).Value IsNot Nothing Then
+                Dim taskName As String = row.Cells(0).Value.ToString()
+                Dim taskID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Names = '{taskName}'")
+                Dim empName As String = row.Cells(1).Value.ToString()
+                Dim empID As String = DBHandler.ExecuteValueQuery($"SELECT Emp_ID FROM Employees WHERE Emp_Name = '{empName}'")
+                Dim rate As Integer = row.Cells(2).Value
+                Dim estHours As Integer = row.Cells(3).Value
+        
+                ' Check if the task is set to 'Pending' in TaskOrders
+                Dim taskOrderStatus As String = DBHandler.ExecuteValueQuery($"SELECT Task_Status FROM TaskOrders WHERE Task_ID = '{taskID}' AND Order_No = '{Order_No}'")
+                If taskOrderStatus = "Pending" Then
+                    ' If the status is 'Pending', update it to 'In Process'
+                    DBHandler.ExecuteStatement($"UPDATE TaskOrders SET Task_Status = 'In Process' WHERE Task_ID = '{taskID}' AND Order_No = '{Order_No}'")
+                End If
+        
+                Dim statement As String = $"INSERT INTO LaborAssignments (Assignment_No, Task_ID, Worker, Pay_Rate, Est_Hours) 
+                                           VALUES ('{Assignment_No}', '{taskID}', '{empID}', {rate}, {estHours})"
+                DBHandler.ExecuteStatement(statement)
+            End If
+        Next
     End Sub
 
     Private Sub EndDate_ValueChanged(sender As Object, e As EventArgs) Handles EndDate.ValueChanged
-        ' Allow status change only when decision date is set
-        'status.Enabled = endDate.Checked
-        If Not endDate.Checked Then
-       '     status.SelectedIndex = 0
-        End If
+        EndDate.CustomFormat = "MM/dd/yyyy"
     End Sub
 
     Private Sub SaveButton_Click(sender As Object, e As EventArgs)
-        'SaveWorkAssignment()
+        Try
+            SaveWorkAssignment()
+            MessageBox.Show("Work Order created successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            CancelButton_Click(nothing, nothing)
+        Catch ex As Exception
+            MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub CancelButton_Click(sender As Object, e As EventArgs)

@@ -256,7 +256,7 @@ CREATE TABLE MaterialAssignments (
     Assignment_No CHAR(6),
     Material_ID CHAR(4),
     Material_Sent INTEGER CONSTRAINT MatSent_Required NOT NULL,
-    Material_Used INTEGER CONSTRAINT MatUsed_Required NOT NULL,
+    Material_Used INTEGER,
 CONSTRAINT PKMatAssignments PRIMARY KEY (Task_ID, Assignment_No, Material_ID),
 CONSTRAINT FKMatAssignments_Task FOREIGN KEY (Task_ID) REFERENCES Tasks,
 CONSTRAINT FKMatAssignments_Assign FOREIGN KEY (Assignment_No) REFERENCES WorkAssignments,
