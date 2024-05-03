@@ -84,14 +84,12 @@ Public Class InvoicePage
         tableLayoutPanel.Controls.Add(startDate, 1, 4)
         tableLayoutPanel.Controls.Add(endDateLabel, 3, 4)
         tableLayoutPanel.Controls.Add(endDate, 4, 4)
-
         tableLayoutPanel.Controls.Add(subTotalLabel, 1, 8)
         tableLayoutPanel.Controls.Add(calc_subTotal, 3, 8)
         tableLayoutPanel.Controls.Add(taxLabel, 1, 9)
         tableLayoutPanel.Controls.Add(calc_tax, 3, 9)
         tableLayoutPanel.Controls.Add(totalLabel, 1, 10)
         tableLayoutPanel.Controls.Add(calc_total, 3, 10)
-
         tableLayoutPanel.Controls.Add(saveButton, 1, 11)
         tableLayoutPanel.Controls.Add(cancelButton, 3, 11)
 
@@ -139,32 +137,83 @@ Public Class InvoicePage
             invoiceNo.Text = existingInvoice
             proposalNo.Text = DBHandler.ExecuteValueQuery($"SELECT Proposal_No FROM Invoices WHERE Invoice_No = '{existingInvoice}'")
         
-            Dim taskData As DataTable = DBHandler.ExecuteTableQuery($"SELECT Tasks.Task_Name, WorkOrders.Location_Name, TaskOrders.Date_Complete " &
-                                                                    "FROM TaskOrders " &
-                                                                    "INNER JOIN Tasks ON TaskOrders.Task_ID = Tasks.Task_ID " &
-                                                                    "INNER JOIN WorkOrders ON TaskOrders.Order_No = WorkOrders.Order_No " &
-                                                                    "WHERE TaskOrders.Invoice_No = '{existingInvoice}'")
+            Dim taskData As DataTable = DBHandler.ExecuteTableQuery($"SELECT Tasks.Task_Names, WorkOrders.Location_Name, TaskOrders.Date_Complete
+                                                                        FROM TaskOrders
+                                                                        INNER JOIN Tasks ON TaskOrders.Task_ID = Tasks.Task_ID
+                                                                        INNER JOIN WorkOrders ON TaskOrders.Order_No = WorkOrders.Order_No
+                                                                        WHERE TaskOrders.Invoice_No = '{existingInvoice}'")
         
-            ' Bind the DataTable to the DataGridView
+            ' ' Bind the DataTable to the DataGridView
+            invoiceDG.AutoGenerateColumns = False
             invoiceDG.DataSource = taskData
         
             ' Bind the columns to the appropriate fields
-            invoiceDG.Columns(0).DataPropertyName = "Task_Name"
-            invoiceDG.Columns(1).DataPropertyName = "Location_Name"
-            invoiceDG.Columns(3).DataPropertyName = "Date_Complete"
+            invoiceDG.Columns("Task").DataPropertyName = "Task_Names"
+            invoiceDG.Columns("Location").DataPropertyName = "Location_Name"
+            invoiceDG.Columns("DateCompleted").DataPropertyName = "Date_Complete"
+
+            startDate.Value = CType(taskData.Compute("MIN(Date_Complete)", ""), DateTime)
+            endDate.Value = CType(taskData.Compute("MAX(Date_Complete)", ""), DateTime)
+
+            AddHandler invoiceDG.CellEndEdit, AddressOf invoiceDG_CellEndEdit
         End If
     End Sub
 
-    ' Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles Me.Load
-    '     If Not String.IsNullOrEmpty(existingInvoice) Then
-    '         ' invoiceNo.Text = originalValues("InvoiceNo")
-    '         ' invoiceDate.Value = originalValues("InvoiceDate")
-    '         ' proposalNo.Text = originalValues("ProposalNo")
-    '     End If
-    'End Sub
+    Private Sub invoiceDG_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs)
+        If e.ColumnIndex = 1 Or e.ColumnIndex = 2 Then
+            Dim row = invoiceDG.Rows(e.RowIndex)
+            Dim value1 As Integer
+
+            ' if column 2 is not an integer, clear the cell
+            If e.ColumnIndex = 2 AndAlso row.Cells(e.ColumnIndex).Value IsNot Nothing AndAlso Not Integer.TryParse(row.Cells(e.ColumnIndex).Value.ToString(), value1) Then
+                row.Cells(e.ColumnIndex).Value = Nothing
+            End If
+    
+    
+            'Calculate the subtotal
+            Dim subtotal As Decimal = invoiceDG.Rows.Cast(Of DataGridViewRow)().
+                Where(Function(r) Not r.IsNewRow).
+                Sum(Function(r) Convert.ToDecimal(r.Cells(2).Value))
+            calc_subTotal.Text = subtotal.ToString("C2")
+            calc_Tax.Text = (subtotal * 0.082).ToString("C2")
+            calc_total.Text = (subtotal * 1.082).ToString("C2")
+        End If
+    End Sub
+
+    Private Sub Save_Invoice_Amounts()
+        ' Save the amounts for individual tasks
+        For Each row As DataGridViewRow In invoiceDG.Rows
+            Dim amount As Decimal = Convert.ToDecimal(row.Cells("Amount").Value)
+        
+            ' Get the Task_Name and Date_Complete from the row
+            Dim taskName As String = Convert.ToString(row.Cells("Task").Value)
+            Dim date1 As DateTime = Convert.ToDateTime(row.Cells("DateCompleted").Value)
+            Dim taskID As String = DBHandler.ExecuteValueQuery($"SELECT Task_ID FROM Tasks WHERE Task_Names = '{taskName}'")
+            
+            ' Format the date correctly for the SQL query
+            Dim dateComplete = date1.ToString("yyyy-MM-dd")
+        
+            ' UPDATE TaskOrders
+            Dim updateQuery As String = $"UPDATE TaskOrders SET Billed_Amount = {amount} WHERE Invoice_No = '{existingInvoice}' AND Task_ID = '{taskID}' AND Date_Complete = TO_DATE('{dateComplete}', 'YYYY-MM-DD')"
+            DBHandler.ExecuteStatement(updateQuery)
+        Next
+    
+        ' Get the Invoice_Date from the form and format it correctly for the SQL query
+        Dim invoice_Date = invoiceDate.Value.ToString("yyyy-MM-dd")
+    
+        ' UPDATE the TOTAL Invoice Amount and Invoice_Date in the Invoices table
+        Dim totalAmount As Decimal = Convert.ToDecimal(calc_total.Text.Substring(1))
+        DBHandler.ExecuteStatement($"UPDATE Invoices SET Invoice_Total = {totalAmount}, Invoice_Date = TO_DATE('{invoice_Date}', 'YYYY-MM-DD') WHERE Invoice_No = '{existingInvoice}'")
+    End Sub
 
     Private Sub SaveButton_Click(sender As Object, e As EventArgs) Handles saveButton.Click
-        MessageBox.Show("Invoice has been updated successfully!")
+        Try
+            Save_Invoice_Amounts()
+            MessageBox.Show("Invoice saved successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            CancelButton_Click(nothing, nothing)
+        Catch ex As Exception
+            MessageBox.Show($"An error occurred while saving the invoice amounts: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub CancelButton_Click(sender As Object, e As EventArgs) Handles cancelButton.Click
