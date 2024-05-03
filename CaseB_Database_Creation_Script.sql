@@ -112,8 +112,8 @@ CONSTRAINT FKWorkOrders_Manager FOREIGN KEY (Manager_ID) REFERENCES Employees(Em
 CREATE TABLE Invoices (
     Invoice_No CHAR(6),
     Proposal_No CHAR(6) CONSTRAINT InvoiceOrder_Required NOT NULL,
-    Invoice_Date DATE DEFAULT SYSDATE,
-    Invoice_Total DECIMAL(10, 2) CONSTRAINT InvoiceTotal_Required NOT NULL,
+    Invoice_Date DATE,
+    Invoice_Total DECIMAL(10, 2),
 CONSTRAINT PKInvoice PRIMARY KEY (Invoice_No),
 CONSTRAINT FKInvoice_Proposal FOREIGN KEY (Proposal_No) REFERENCES Proposals,
 CONSTRAINT PosInvoiceTotal CHECK (Invoice_Total > 0)
@@ -429,7 +429,7 @@ INSERT INTO Proposals (Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_D
 VALUES ('C00005', 1, 'Walk Through', 'E003', TO_DATE('2024-04-15', 'YYYY-MM-DD'), 'Denied', TO_DATE('2024-04-20', 'YYYY-MM-DD'));
 
 INSERT INTO Proposals (Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status, Decision_Date)
-VALUES ('C00006', 1, 'Floor Plan', 'E003', TO_DATE('2024-04-15', 'YYYY-MM-DD'), 'Accepted', TO_DATE('2024-04-30', 'YYYY-MM-DD'));
+VALUES ('C00006', 2, 'Floor Plan', 'E003', TO_DATE('2024-04-15', 'YYYY-MM-DD'), 'Accepted', TO_DATE('2024-04-30', 'YYYY-MM-DD'));
 
 INSERT INTO Proposals (Cust_No, Location_QTY, Est_Method, Salesperson_ID, Prop_Date, Prop_Status)
 VALUES ('C00007', 2, 'Floor Plan', 'E004', TO_DATE('2024-04-19', 'YYYY-MM-DD'), 'Pending');
@@ -485,6 +485,9 @@ INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
 VALUES ('P00006', 'T001', 2950, 4.50);
 
 INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
+VALUES ('P00006', 'T004', 1600, 7.00);
+
+INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
 VALUES ('P00007', 'T001', 7500, 4.50);
 
 INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
@@ -527,12 +530,23 @@ INSERT INTO TaskRequests (Proposal_No, Task_ID, Total_SQFT, Quoted_SQFTPrice)
 VALUES ('P00013', 'T001', 1500, 4.50);
 
 
+-- INSERT INVOICE DATA --
+INSERT INTO Invoices (Invoice_No, Proposal_No, Invoice_Date, Invoice_Total)
+VALUES ('I00001', 'P00001', TO_DATE('2024-04-08', 'YYYY-MM-DD'), 12500.00);
+
+INSERT INTO Invoices (Invoice_No, Proposal_No, Invoice_Date, Invoice_Total)
+VALUES ('I00002', 'P00004', TO_DATE('2024-04-23', 'YYYY-MM-DD'), 25650.00);
+
+INSERT INTO Invoices (Invoice_No, Proposal_No)
+VALUES ('I00003', 'P00006');
+
+
 -- INSERT WORK ORDER DATA --
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00001-01', 'P00001', 'Acme Construction Office', '123 Main St, Anytown, TX 12345', TO_DATE('2024-04-01', 'YYYY-MM-DD'), '', 'E001');
+VALUES ('W00001-01', 'P00001', 'Acme Construction Office', '123 Main St, Anytown, TX 12345', TO_DATE('2024-04-10', 'YYYY-MM-DD'), '', 'E001');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00001-02', 'P00001', 'Acme Construction Warehouse', '123 Main St, Anytown, TX 12345', TO_DATE('2024-04-01', 'YYYY-MM-DD'), '', 'E001');
+VALUES ('W00001-02', 'P00001', 'Acme Construction Warehouse', '123 Main St, Anytown, TX 12345', TO_DATE('2024-04-10', 'YYYY-MM-DD'), '', 'E001');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
 VALUES ('W00002-01', 'P00002', 'Centerview Subdivision Lot 2', '456 Oak Rd, Pionville, LA 70890', TO_DATE('2024-04-15', 'YYYY-MM-DD'), '', 'E002');
@@ -541,33 +555,36 @@ INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, 
 VALUES ('W00002-02', 'P00002', 'Centerview Subivision Lot 7', '456 Otter Dr, Pionville, LA 70890', TO_DATE('2024-04-15', 'YYYY-MM-DD'), '', 'E002');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00003-01', 'P00003', 'Oakland Transit Authority', '784 Capitol Ave, Oakland, AR 20001', TO_DATE('2024-04-01', 'YYYY-MM-DD'), '', 'E001');
+VALUES ('W00003-01', 'P00003', 'Oakland Transit Authority', '784 Capitol Ave, Oakland, AR 20001', TO_DATE('2024-05-01', 'YYYY-MM-DD'), '', 'E001');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00003-02', 'P00003', 'Oakland Transit Annex', '789 Capitol Ave, Oakland, AR 20001', TO_DATE('2024-04-01', 'YYYY-MM-DD'), '', 'E002');
+VALUES ('W00003-02', 'P00003', 'Oakland Transit Annex', '789 Capitol Ave, Oakland, AR 20001', TO_DATE('2024-05-01', 'YYYY-MM-DD'), '', 'E002');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00004-01', 'P00004', 'Lakeview City Hall', '104 Main Ave, Lakeview, TX 62701', TO_DATE('2024-04-01', 'YYYY-MM-DD'), '', 'E001');
+VALUES ('W00004-01', 'P00004', 'Lakeview City Hall', '104 Main Ave, Lakeview, TX 62701', TO_DATE('2024-04-23', 'YYYY-MM-DD'), '', 'E001');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00005-01', 'P00006', 'Chesterton Residence', '789 Maple Ave, Suburbville, LA 70610', TO_DATE('2024-04-01', 'YYYY-MM-DD'), '', 'E002');
+VALUES ('W00005-01', 'P00006', 'Chesterton Residence', '789 Maple Ave, Suburbville, LA 70610', TO_DATE('2024-05-04', 'YYYY-MM-DD'), '', 'E002');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00006-01', 'P00008', 'Altitude Products LLC.', '1105 Steward Blvd, Trailhead, TX 20210', TO_DATE('2024-04-01', 'YYYY-MM-DD'), '', 'E002');
+VALUES ('W00005-02', 'P00006', 'Broadmoore Development Lot 12', '1105 Pine St, Newtown, LA 70610', TO_DATE('2024-05-04', 'YYYY-MM-DD'), '', 'E002');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00006-02', 'P00008', 'Precision Manufacturing Warehouse #3', '159 Iron St, Tyler, TX 75701', TO_DATE('2024-04-01', 'YYYY-MM-DD'), '', 'E001');
+VALUES ('W00006-01', 'P00008', 'Altitude Products LLC.', '1105 Steward Blvd, Trailhead, TX 20210', TO_DATE('2024-05-10', 'YYYY-MM-DD'), '', 'E002');
+
+INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
+VALUES ('W00006-02', 'P00008', 'Precision Manufacturing Warehouse #3', '159 Iron St, Tyler, TX 75701', TO_DATE('2024-05-15', 'YYYY-MM-DD'), '', 'E001');
 
 
 -- INSERT TASKORDER DATA --
-INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete)
-VALUES ('T001', 'W00001-01', 500, 12, 'Completed', TO_DATE('2024-04-05', 'YYYY-MM-DD'));
+INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete, Billed_Amount, Invoice_No)
+VALUES ('T001', 'W00001-01', 500, 12, 'Completed', TO_DATE('2024-04-05', 'YYYY-MM-DD'), 2850, 'I00001');
 
-INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete)
-VALUES ('T004', 'W00001-01', 450, 6, 'Completed', TO_DATE('2024-04-05', 'YYYY-MM-DD'));
+INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete, Billed_Amount, Invoice_No)
+VALUES ('T004', 'W00001-01', 450, 6, 'Completed', TO_DATE('2024-04-05', 'YYYY-MM-DD'), 6500, 'I00001');
 
-INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete)
-VALUES ('T004', 'W00001-02', 350, 18, 'Completed', TO_DATE('2024-04-05', 'YYYY-MM-DD'));
+INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete, Billed_Amount, Invoice_No)
+VALUES ('T004', 'W00001-02', 350, 18, 'Completed', TO_DATE('2024-04-08', 'YYYY-MM-DD'), 3150, 'I00001');
 
 INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete)
 VALUES ('T001', 'W00002-01', 1050, 15, 'Completed', TO_DATE('2024-04-17', 'YYYY-MM-DD'));
@@ -584,11 +601,17 @@ VALUES ('T001', 'W00003-01', 2750, 15, 'Pending');
 INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status)
 VALUES ('T005', 'W00003-02', 1250, 35, 'Pending');
 
-INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete)
-VALUES ('T007', 'W00004-01', 3800, 50, 'Completed', TO_DATE('2024-04-22', 'YYYY-MM-DD'));
+INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete, Billed_Amount, Invoice_No)
+VALUES ('T007', 'W00004-01', 3800, 50, 'Completed', TO_DATE('2024-04-22', 'YYYY-MM-DD'), 25650, 'I00002');
 
-INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete)
-VALUES ('T001', 'W00005-01', 2950, 50, 'Completed', TO_DATE('2024-04-29', 'YYYY-MM-DD'));
+INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete, Invoice_No)
+VALUES ('T001', 'W00005-01', 1500, 50, 'Completed', TO_DATE('2024-04-26', 'YYYY-MM-DD'), 'I00003');
+
+INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete, Invoice_No)
+VALUES ('T004', 'W00005-01', 1600, 30, 'Completed', TO_DATE('2024-04-29', 'YYYY-MM-DD'), 'I00003');
+
+INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status, Date_Complete, Invoice_No)
+VALUES ('T001', 'W00005-02', 1450, 30, 'Completed', TO_DATE('2024-05-03', 'YYYY-MM-DD'), 'I00003');
 
 INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status)
 VALUES ('T001', 'W00006-01', 3500, 65, 'Pending');
@@ -599,10 +622,10 @@ VALUES ('T006', 'W00006-02', 2050, 45, 'Pending');
 
 -- INSERT WORK ASSIGNMENT DATA --
 INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
-VALUES ('A00001', 'W00001-01', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 1);
+VALUES ('A00001', 'W00001-01', 'E001', TO_DATE('2024-04-04', 'YYYY-MM-DD'), TO_DATE('2024-04-05', 'YYYY-MM-DD'), 'E005', 1);
 
 INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
-VALUES ('A00002', 'W00001-02', 'E001', TO_DATE('2024-04-02', 'YYYY-MM-DD'), TO_DATE('2024-04-03', 'YYYY-MM-DD'), 'E005', 1);
+VALUES ('A00002', 'W00001-02', 'E001', TO_DATE('2024-04-07', 'YYYY-MM-DD'), TO_DATE('2024-04-08', 'YYYY-MM-DD'), 'E005', 1);
 
 INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
 VALUES ('A00003', 'W00002-01', 'E002', TO_DATE('2024-04-16', 'YYYY-MM-DD'), TO_DATE('2024-04-17', 'YYYY-MM-DD'), 'E006', 2);
@@ -617,10 +640,13 @@ INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date,
 VALUES ('A00006', 'W00004-01', 'E002', TO_DATE('2024-04-21', 'YYYY-MM-DD'), TO_DATE('2024-04-22', 'YYYY-MM-DD'), 'E006', 2);
 
 INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
-VALUES ('A00007', 'W00005-01', 'E002', TO_DATE('2024-04-26', 'YYYY-MM-DD'), TO_DATE('2024-04-27', 'YYYY-MM-DD'), 'E006', 2);
+VALUES ('A00007', 'W00005-01', 'E002', TO_DATE('2024-04-25', 'YYYY-MM-DD'), TO_DATE('2024-04-26', 'YYYY-MM-DD'), 'E006', 2);
 
 INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
 VALUES ('A00008', 'W00005-01', 'E002', TO_DATE('2024-04-28', 'YYYY-MM-DD'), TO_DATE('2024-04-29', 'YYYY-MM-DD'), 'E006', 2);
+
+INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
+VALUES ('A00009', 'W00005-02', 'E002', TO_DATE('2024-05-02', 'YYYY-MM-DD'), TO_DATE('2024-05-03', 'YYYY-MM-DD'), 'E006', 2);
 
 
 -- INSERT MATERIAL ASSIGNMENT DATA --
@@ -652,7 +678,10 @@ INSERT INTO MaterialAssignments (Task_ID, Assignment_No, Material_ID, Material_S
 VALUES ('T001', 'A00007', 'M001', 20, 18);
 
 INSERT INTO MaterialAssignments (Task_ID, Assignment_No, Material_ID, Material_Sent, Material_Used)
-VALUES ('T001', 'A00008', 'M001', 25, 23);
+VALUES ('T004', 'A00008', 'M007', 5, 4);
+
+INSERT INTO MaterialAssignments (Task_ID, Assignment_No, Material_ID, Material_Sent, Material_Used)
+VALUES ('T001', 'A00009', 'M001', 15, 14);
 
 
 -- INSERT LABOR ASSIGNMENT DATA --
@@ -699,24 +728,15 @@ INSERT INTO LaborAssignments (Assignment_No, Task_ID, Worker, Pay_Rate, Est_Hour
 VALUES ('A00007', 'T001', 'E009', 15.00, 10, 10);
 
 INSERT INTO LaborAssignments (Assignment_No, Task_ID, Worker, Pay_Rate, Est_Hours, Used_Hours)
-VALUES ('A00008', 'T001', 'E008', 20.00, 10, 10);
+VALUES ('A00008', 'T004', 'E008', 20.00, 10, 10);
 
 INSERT INTO LaborAssignments (Assignment_No, Task_ID, Worker, Pay_Rate, Est_Hours, Used_Hours)
-VALUES ('A00008', 'T001', 'E007', 16.75, 10, 10);
+VALUES ('A00008', 'T004', 'E007', 16.75, 10, 10);
 
 INSERT INTO LaborAssignments (Assignment_No, Task_ID, Worker, Pay_Rate, Est_Hours, Used_Hours)
-VALUES ('A00008', 'T001', 'E009', 15.00, 10, 10);
+VALUES ('A00009', 'T001', 'E009', 15.00, 10, 10);
 
 
--- INSERT INVOICE DATA --
-INSERT INTO Invoices (Invoice_No, Proposal_No, Invoice_Date, Invoice_Total)
-VALUES ('I00001', 'P00001', TO_DATE('2024-04-05', 'YYYY-MM-DD'), 2500.00);
-
-INSERT INTO Invoices (Invoice_No, Proposal_No, Invoice_Date, Invoice_Total)
-VALUES ('I00002', 'P00004', TO_DATE('2024-04-23', 'YYYY-MM-DD'), 25650.00);
-
-INSERT INTO Invoices (Invoice_No, Proposal_No, Invoice_Date, Invoice_Total)
-VALUES ('I00003', 'P00006', TO_DATE('2024-04-30', 'YYYY-MM-DD'), 13600.00);
 
 
 

@@ -105,7 +105,7 @@ Public Class Dashboard
             button1.Text = "Prepare Invoice"
             button2.Text = "Edit Invoice"
             button3.Text = "Print Invoice"
-            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT * FROM Invoices")
+            dashboardDGV.DataSource = DBHandler.ExecuteTableQuery("SELECT * FROM Invoices ORDER BY CASE WHEN Invoice_Date IS NULL THEN 0 ELSE 1 END, Invoice_Date DESC")
         End Select
     End Sub
 
@@ -127,7 +127,10 @@ Public Class Dashboard
                     Me.Parent.Controls.Add(workOrderForm)
                     Me.Parent.Controls.Remove(Me)
                 Case "Invoices" ' -- PREPARE INVOICE --
-
+                    Dim existingInvoice = dashboardDGV.Rows(rowIndex).Cells(0).Value.ToString()
+                    Dim invoicePage As New InvoicePage(existingInvoice) With {.Dock = DockStyle.Fill}
+                    Me.Parent.Controls.Add(invoicePage)
+                    Me.Parent.Controls.Remove(Me)
                 Case Else
                     MessageBox.Show($"Tab Select Error")
             End Select
