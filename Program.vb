@@ -5,13 +5,11 @@ Imports System.Windows.Forms
 Imports Oracle.ManagedDataAccess.Client
 
 ' TO-DO:
-' 1. Work Order Form --> Primary to Secondary
-' 2. Work Assignment --> Finish Date to -> Status? Also exclude closed assignments?
-' 3. Work Assignment Form --> Move Pay_RateType to Employee Table / link to dropdown and calculate labor costs
-' 4. Create Invoice Form
-' 5. Proposal Form --> Editing Functionality
-' 6. Add SQL Commits
-' 7. Add WinForms Themes?
+' 1. Work Order Form --> Update SQL queries
+' 2. Work Assignment Form --> Move Pay_RateType to Employee Table / link to dropdown and calculate labor costs
+' 3. Create Invoice Form
+' 4. Add SQL Commits
+' 5. Add WinForms Themes?
 
 Public Class MainForm
     Inherits Form

@@ -21,23 +21,26 @@ Public Class WorkOrderPage
     Private workOrderNotesLabel As New Label() With {.Text = "Notes:"}
     Private manager As New ComboBox() With {.DropDownStyle = ComboBoxStyle.DropDownList}
     Private managerLabel As New Label() With {.Text = "Manager:"}
-    Private withEvents dateRequired As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom, .CustomFormat = " "}
+    Private withEvents dateRequired As New DateTimePicker() With {.Format = DateTimePickerFormat.Custom}
     Private dateRequiredLabel As New Label() With {.Text = "Date Required:"}
     Private WithEvents SaveButton As New Button() With {.Text = "Save", .Dock = DockStyle.Top, .Margin = New Padding(0, 120, 0, 0), .Height = 40}
     Private WithEvents CancelButton As New Button() With {.Text = "Cancel", .Dock = DockStyle.Top, .Margin = New Padding(0, 120, 0, 0), .Height = 40}
 
     Private WithEvents taskOrderDG As New DataGridView() With {.Anchor = AnchorStyles.Left}
     Private taskOrder_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Task", .Name = "Task"}
+    Private taskStatus_DGColumn As New DataGridViewComboBoxColumn() With {.HeaderText = "Status", .Name = "Status"}
 
     Public Property selectedProposal As String
     Public Property generatedWorkOrder As String
+    Public Property selectedWorkOrder As String
     Private mainFields As Control() = {workOrderNo, proposalNo, workLocationName, workLocationAddress, workOrderDate, workOrderNotes, manager, dateRequired}
     Private mainLabels As Label() = {workOrderNoLabel, proposalNoLabel, workLocationLabel, workLocationNameLabel, workLocationAddressLabel, workOrderDateLabel, workOrderNotesLabel, managerLabel, dateRequiredLabel}
+    Private originalValues As New Dictionary(Of String, String)
 
-
-    Public Sub New(ByVal selectedProposal As String, ByVal generatedWorkOrder As String)
+    Public Sub New(ByVal selectedProposal As String, ByVal generatedWorkOrder As String, ByVal selectedWorkOrder As String)
         Me.selectedProposal = selectedProposal
         Me.generatedWorkOrder = generatedWorkOrder
+        Me.selectedWorkOrder = selectedWorkOrder
 
         Dim headerLabel As New Label() With {
             .Dock = DockStyle.Top,
@@ -46,15 +49,21 @@ Public Class WorkOrderPage
             .Height = 50}
         Me.Controls.Add(headerLabel)
 
-        Try
-            If generatedWorkOrder.EndsWith("01") Then
-                headerLabel.Text = "Primary Work Order"
-            Else
-                headerLabel.Text = "Secondary Work Order"
-            End If
-        Catch ex As Exception
-            MessageBox.Show("Error: " & ex.Message & vbCrLf & "generatedWorkOrder: " & generatedWorkOrder, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        If String.IsNullOrEmpty(selectedWorkOrder) Then
+            Try
+                If generatedWorkOrder.EndsWith("01") Then
+                    headerLabel.Text = "Primary Work Order"
+                Else
+                    headerLabel.Text = "Secondary Work Order"
+                End If
+            Catch ex As Exception
+                MessageBox.Show("Error: " & ex.Message & vbCrLf & "generatedWorkOrder: " & generatedWorkOrder, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        Else If selectedWorkOrder.EndsWith("01") Then
+            headerLabel.Text = "Primary Work Order"
+        Else
+            headerLabel.Text = "Secondary Work Order"
+        End If
 
         ' Configure TableLayoutPanel
         Dim tableLayoutPanel As New TableLayoutPanel()
@@ -80,16 +89,20 @@ Public Class WorkOrderPage
         Me.Controls.Add(tableLayoutPanel)
 
         ' Configure DataGridView
+        taskStatus_DGColumn.DataSource = New List(Of String) From {"Pending", "In Process", "Completed"}
         taskOrderDG.Margin = New Padding(200, 40, 200, 10)
         tableLayoutPanel.SetColumnSpan(taskOrderDG, 5)
+        tableLayoutPanel.Controls.Add(taskOrderDG, 0, 7)
         taskOrderDG.Columns.Insert(0, taskOrder_DGColumn)
         taskOrderDG.Columns.Add("SquareFeet", "Square Feet")
         taskOrderDG.Columns.Add("EstHours", "Estimated Hours")
-        taskOrderDG.Columns.Add("Status", "Status")
+        If String.IsNullOrEmpty(selectedWorkOrder) Then
+            taskOrderDG.Columns.Add("Status", "Status")
+        Else
+            taskOrderDG.Columns.Insert(3, taskStatus_DGColumn)
+        End If
         taskOrderDG.Columns.Add("DateComplete", "Date Complete")
-        taskOrderDG.Columns(3).ReadOnly = True
         taskOrderDG.Columns(4).ReadOnly = True
-        taskOrderDG.Rows.Add(3)
 
         For Each control As Control In mainFields
             control.Width = 200
@@ -119,7 +132,6 @@ Public Class WorkOrderPage
         tableLayoutPanel.Controls.Add(workOrderDate, 4, 2)
         tableLayoutPanel.Controls.Add(workOrderNotesLabel, 3, 6)
         tableLayoutPanel.Controls.Add(workOrderNotes, 4, 6)
-        tableLayoutPanel.Controls.Add(taskOrderDG, 0, 7)
         tableLayoutPanel.Controls.Add(managerLabel, 0, 8)
         tableLayoutPanel.Controls.Add(manager, 1, 8)
         tableLayoutPanel.Controls.Add(dateRequiredLabel, 3, 8)
@@ -127,6 +139,49 @@ Public Class WorkOrderPage
         tableLayoutPanel.Controls.Add(SaveButton, 1, 10)
         tableLayoutPanel.Controls.Add(CancelButton, 3, 10)
 
+        If String.IsNullOrEmpty(selectedWorkOrder) Then
+            proposalNo.Text = selectedProposal
+            workOrderNo.Text = generatedWorkOrder
+            taskOrderDG.Columns(3).ReadOnly = True
+            taskOrderDG.Rows.Add(3)
+            dateRequired.CustomFormat = " "
+        Else
+            workOrderNo.Text = selectedWorkOrder
+            Dim workOrderData As DataTable = DBHandler.ExecuteTableQuery("SELECT * FROM WorkOrders WHERE Order_No = '" & selectedWorkOrder & "'")
+            Dim taskOrderData As DataTable = DBHandler.ExecuteTableQuery("SELECT TaskOrders.Task_ID, Task_Names, Task_SQFT, Est_Duration, Task_Status, Date_Complete FROM TaskOrders JOIN Tasks ON TaskOrders.Task_ID = Tasks.Task_ID WHERE Order_No = '" & selectedWorkOrder & "'")
+
+            If workOrderData.Rows.Count > 0 and taskOrderData.Rows.Count > 0 Then
+                originalValues.Add("Proposal_No", workOrderData.Rows(0)("Proposal_No").ToString())
+                originalValues.Add("Location_Name", workOrderData.Rows(0)("Location_Name").ToString())
+                originalValues.Add("Location_Address", workOrderData.Rows(0)("Location_Address").ToString())
+                originalValues.Add("Required_Date", workOrderData.Rows(0)("Required_Date").ToString())
+                originalValues.Add("Order_Notes", workOrderData.Rows(0)("Order_Notes").ToString())
+                originalValues.Add("Manager_ID", workOrderData.Rows(0)("Manager_ID").ToString())
+
+                proposalNo.Text = originalValues("Proposal_No")
+                workLocationName.Text = originalValues("Location_Name")
+                workLocationAddress.Text = originalValues("Location_Address")
+                workOrderDate.Value = DateTime.Parse(originalValues("Required_Date"))
+                workOrderNotes.Text = originalValues("Order_Notes")
+
+                For Each row As DataRow In taskOrderData.Rows
+                    Dim taskIndex As Integer = taskOrderDG.Rows.Add()
+                    Dim dataTable As DataTable = DBHandler.ExecuteTableQuery("SELECT Task_Names FROM Tasks WHERE Task_ID IN (SELECT Task_ID FROM TaskRequests WHERE Proposal_No = '" & originalValues("Proposal_No") & "')")
+
+                    ' Set the data source of the DataGridViewComboBoxColumn.
+                    TaskOrder_DGColumn.DataSource = dataTable
+                    TaskOrder_DGColumn.DisplayMember = "Task_Names"
+                    TaskOrder_DGColumn.ValueMember = "Task_Names"
+                          
+                    taskOrderDG.Rows(taskIndex).Cells("Task").Value = row("Task_Names").ToString()
+                    taskOrderDG.Rows(taskIndex).Cells("SquareFeet").Value = row("Task_SQFT").ToString()
+                    taskOrderDG.Rows(taskIndex).Cells("EstHours").Value = row("Est_Duration").ToString()
+                    taskOrderDG.Rows(taskIndex).Cells("Status").Value = row("Task_Status").ToString()
+                    taskOrderDG.Rows(taskIndex).Cells("DateComplete").Value = row("Date_Complete").ToString()
+                    taskOrderDG_CellEndEdit(taskOrderDG, New DataGridViewCellEventArgs(0, taskIndex))
+                Next
+            End If
+        End If
 
         AddHandler Me.Load, AddressOf WorkOrderPage_Load
         AddHandler dateRequired.ValueChanged, AddressOf dateRequired_ValueChanged
@@ -137,9 +192,15 @@ Public Class WorkOrderPage
 
     Private Sub WorkOrderPage_Load(sender As Object, e As EventArgs) Handles Me.Load
         PopulateManagersList()
-        PopulateTasksList()
-        proposalNo.Text = selectedProposal
-        workOrderNo.Text = generatedWorkOrder
+
+        If Not String.IsNullOrEmpty(selectedWorkOrder) Then
+            manager.SelectedValue = DBHandler.ExecuteValueQuery("SELECT Emp_Name FROM Employees WHERE Emp_ID = '" & originalValues("Manager_ID") & "'")
+            taskOrderDG.Columns(0).ReadOnly = True
+            dateRequired.CustomFormat = "MM/dd/yyyy"
+        Else
+            PopulateTasksList()
+        End If
+
         workLocationAddress.Size = New Size(200, 35)
         workOrderNotes.Size = New Size(200, 35)
     End Sub
@@ -173,23 +234,30 @@ Public Class WorkOrderPage
 
     Private Sub taskOrderDG_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles taskOrderDG.CellEndEdit
         Dim value As String = If(taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value IsNot Nothing, taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value.ToString(), 0)
-        Dim selectedTask As String = If(taskOrderDG.Rows(e.RowIndex).Cells(0).Value IsNot Nothing, taskOrderDG.Rows(e.RowIndex).Cells(0).Value.ToString(), String.Empty)
-        Dim maxSQFT As Integer = DBHandler.ExecuteValueQuery("SELECT Total_SQFT FROM TaskRequests WHERE Proposal_No = '" & selectedProposal & "' AND Task_ID IN (SELECT Task_ID FROM Tasks WHERE Task_Names = '" & selectedTask & "')")
-    
+
         If (e.ColumnIndex = 1 Or e.ColumnIndex = 2) And Not IsNumeric(value) Then
             taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value = Nothing
         End If
         
-        If e.ColumnIndex = 1 Then
-            If CInt(value) > maxSQFT Then
-                MessageBox.Show($"Square footage exceeds maximum for this task: {maxSQFT}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                taskOrderDG.Rows(e.RowIndex).Cells(1).Value = Nothing
+        If String.IsNullOrEmpty(selectedWorkOrder) Then
+            Dim selectedTask As String = If(taskOrderDG.Rows(e.RowIndex).Cells(0).Value IsNot Nothing, taskOrderDG.Rows(e.RowIndex).Cells(0).Value.ToString(), String.Empty)
+            Dim maxSQFT As Integer = DBHandler.ExecuteValueQuery("SELECT Total_SQFT FROM TaskRequests WHERE Proposal_No = '" & selectedProposal & "' AND Task_ID IN (SELECT Task_ID FROM Tasks WHERE Task_Names = '" & selectedTask & "')")
+            
+            If e.ColumnIndex = 1 Then
+                If CInt(value) > maxSQFT Then
+                    MessageBox.Show($"Square footage exceeds maximum for this task: {maxSQFT}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    taskOrderDG.Rows(e.RowIndex).Cells(1).Value = Nothing
+                End If
+            End If
+            
+            If e.ColumnIndex = 0 Then
+                taskOrderDG.Rows(e.RowIndex).Cells(3).Value = "--"
+                taskOrderDG.Rows(e.RowIndex).Cells(4).Value = "--"
             End If
         End If
-        
-        If e.ColumnIndex = 0 Then
-            taskOrderDG.Rows(e.RowIndex).Cells(3).Value = "--"
-            taskOrderDG.Rows(e.RowIndex).Cells(4).Value = "--"
+
+        If e.ColumnIndex = 3 And taskOrderDG.Rows(e.RowIndex).Cells(e.ColumnIndex).Value.ToString() = "Completed" Then
+            taskOrderDG.Rows(e.RowIndex).Cells(4).Value = DateTime.Now.ToString("MM/dd/yyyy")
         End If
     End Sub
 
@@ -224,8 +292,14 @@ Public Class WorkOrderPage
         CancelButton_Click(nothing, nothing)
     End Sub
 
+
+
     Private Sub SaveButton_Click(sender As Object, e As EventArgs)
-        SaveWorkOrder()
+        If String.IsNullOrEmpty(selectedWorkOrder) Then
+            SaveWorkOrder()
+        Else
+            messagebox.show("Update functionality not yet implemented.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
     End Sub
 
     Private Sub CancelButton_Click(sender As Object, e As EventArgs)

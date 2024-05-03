@@ -120,7 +120,12 @@ Public Class Dashboard
                     Me.Parent.Controls.Add(proposalPage)
                     Me.Parent.Controls.Remove(Me)
                 Case "Work Orders" ' -- UPDATE WORK ORDER --
-
+                    Dim generatedWorkOrder = String.Empty
+                    Dim selectedWorkOrder = dashboardDGV.Rows(rowIndex).Cells(0).Value.ToString()
+                    Dim selectedProposal = String.Empty
+                    Dim workOrderForm As New WorkOrderPage(selectedProposal, generatedWorkOrder, selectedWorkOrder) With {.Dock = DockStyle.Fill}
+                    Me.Parent.Controls.Add(workOrderForm)
+                    Me.Parent.Controls.Remove(Me)
                 Case "Invoices" ' -- PREPARE INVOICE --
 
                 Case Else
@@ -159,12 +164,13 @@ Public Class Dashboard
             Select Case selectedTab.Text
                 Case "Proposals" ' -- CREATE WORK ORDER --
                     Dim selectedProposal = dashboardDGV.Rows(rowIndex).Cells(0).Value.ToString()
+                    Dim selectedWorkOrder = String.Empty
                     Dim locationQTY = dashboardDGV.Rows(rowIndex).Cells(2).Value.ToString()
 
                     ' Create a new page instance for each location
                     For i As Integer = 1 To locationQTY
                         Dim generatedWorkOrder = "W" & selectedProposal.Substring(2, 4) & "-" & i.ToString("D2")
-                        Dim workOrderControl As New WorkOrderPage(selectedProposal, generatedWorkOrder) With {.Dock = DockStyle.Fill}
+                        Dim workOrderControl As New WorkOrderPage(selectedProposal, generatedWorkOrder, selectedWorkOrder) With {.Dock = DockStyle.Fill}
                         Me.Parent.Controls.Add(workOrderControl)
                     Next
 
