@@ -316,7 +316,7 @@ INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Dat
 VALUES ('Green Valley Contractors', '456 Pine St, Greenville, OR 97330', 'General Contractor', 1);
 
 INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
-VALUES ('Southeastern University', '123 College Rd, Unitown, MA 02155', 'Government', 1);
+VALUES ('Southeastern University', '123 College Rd, Jonestown, LA 71055', 'Government', 1);
 
 INSERT INTO Customers (Cust_BillName, Cust_BillAddress, Cust_Type, BillCycle_Date)
 VALUES ('Rick Anderson', '987 Valley Dr, Hilltown, CO 80501', 'Residential', 3);
@@ -549,16 +549,16 @@ INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, 
 VALUES ('W00001-02', 'P00001', 'Acme Construction Warehouse', '123 Main St, Anytown, TX 12345', TO_DATE('2024-04-10', 'YYYY-MM-DD'), '', 'E001');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00002-01', 'P00002', 'Centerview Subdivision Lot 2', '456 Oak Rd, Pionville, LA 70890', TO_DATE('2024-04-15', 'YYYY-MM-DD'), '', 'E002');
+VALUES ('W00002-01', 'P00002', 'Centerview Subdivision Lot 2', '456 Oak Rd, Pionville, LA 70890', TO_DATE('2024-05-10', 'YYYY-MM-DD'), '', 'E002');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00002-02', 'P00002', 'Centerview Subivision Lot 7', '456 Otter Dr, Pionville, LA 70890', TO_DATE('2024-04-15', 'YYYY-MM-DD'), '', 'E002');
+VALUES ('W00002-02', 'P00002', 'Centerview Subivision Lot 7', '456 Otter Dr, Pionville, LA 70890', TO_DATE('2024-05-10', 'YYYY-MM-DD'), '', 'E002');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00003-01', 'P00003', 'Oakland Transit Authority', '784 Capitol Ave, Oakland, AR 20001', TO_DATE('2024-05-01', 'YYYY-MM-DD'), '', 'E001');
+VALUES ('W00003-01', 'P00003', 'Oakland Transit Authority', '784 Capitol Ave, Oakland, AR 20001', TO_DATE('2024-05-18', 'YYYY-MM-DD'), '', 'E001');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
-VALUES ('W00003-02', 'P00003', 'Oakland Transit Annex', '789 Capitol Ave, Oakland, AR 20001', TO_DATE('2024-05-01', 'YYYY-MM-DD'), '', 'E002');
+VALUES ('W00003-02', 'P00003', 'Oakland Transit Annex', '789 Capitol Ave, Oakland, AR 20001', TO_DATE('2024-05-18', 'YYYY-MM-DD'), '', 'E002');
 
 INSERT INTO WorkOrders (Order_No, Proposal_No, Location_Name, Location_Address, Required_Date, Order_Notes, Manager_ID)
 VALUES ('W00004-01', 'P00004', 'Lakeview City Hall', '104 Main Ave, Lakeview, TX 62701', TO_DATE('2024-04-23', 'YYYY-MM-DD'), '', 'E001');
@@ -593,7 +593,7 @@ INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status)
 VALUES ('T002', 'W00002-01', 1150, 9, 'In Process');
 
 INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status)
-VALUES ('T001', 'W00002-02', 1200, 24, 'Pending');
+VALUES ('T001', 'W00002-02', 1200, 24, 'In Process');
 
 INSERT INTO TaskOrders (Task_ID, Order_No, Task_SQFT, Est_Duration, Task_Status)
 VALUES ('T001', 'W00003-01', 2750, 15, 'Pending');
@@ -647,6 +647,9 @@ VALUES ('A00008', 'W00005-01', 'E002', TO_DATE('2024-04-28', 'YYYY-MM-DD'), TO_D
 
 INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Finish_Date, Supervisor_ID, Vehicle_No)
 VALUES ('A00009', 'W00005-02', 'E002', TO_DATE('2024-05-02', 'YYYY-MM-DD'), TO_DATE('2024-05-03', 'YYYY-MM-DD'), 'E006', 2);
+
+INSERT INTO WorkAssignments (Assignment_No, Order_No, Authorizer_ID, Start_Date, Supervisor_ID, Vehicle_No)
+VALUES ('A00010', 'W00002-02', 'E002', TO_DATE('2024-05-04', 'YYYY-MM-DD'), 'E006', 2);
 
 
 -- INSERT MATERIAL ASSIGNMENT DATA --

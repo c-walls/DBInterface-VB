@@ -2,6 +2,7 @@ Imports System
 Imports System.Data
 Imports System.Drawing
 Imports System.Windows.Forms
+Imports System.Drawing.Printing
 
 Public Class InvoicePage
     Inherits UserControl
@@ -33,12 +34,13 @@ Public Class InvoicePage
     Private calculatedFields As New List(Of Control) From {calc_subTotal, calc_tax, calc_total}
     Private calculatedLabels As New List(Of Control) From {subTotalLabel, taxLabel, totalLabel}
     
-    'Private cust_DataTable As New DataTable()
     Private originalValues As New Dictionary(Of String, Object)
     Public Property existingInvoice As String
+    Public Property printInvoice As Boolean
 
-    Public Sub New(ByVal existingInvoice As String)
+    Public Sub New(ByVal existingInvoice As String, Optional ByVal printInvoice As Boolean = False)
         Me.existingInvoice = existingInvoice
+        Me.printInvoice = printInvoice
 
         ' Create a header label
         Dim headerLabel As New Label() With {
@@ -137,7 +139,7 @@ Public Class InvoicePage
             invoiceNo.Text = existingInvoice
             proposalNo.Text = DBHandler.ExecuteValueQuery($"SELECT Proposal_No FROM Invoices WHERE Invoice_No = '{existingInvoice}'")
         
-            Dim taskData As DataTable = DBHandler.ExecuteTableQuery($"SELECT Tasks.Task_Names, WorkOrders.Location_Name, TaskOrders.Date_Complete
+            Dim taskData As DataTable = DBHandler.ExecuteTableQuery($"SELECT Tasks.Task_Names, WorkOrders.Location_Name, TaskOrders.Billed_Amount, TaskOrders.Date_Complete
                                                                         FROM TaskOrders
                                                                         INNER JOIN Tasks ON TaskOrders.Task_ID = Tasks.Task_ID
                                                                         INNER JOIN WorkOrders ON TaskOrders.Order_No = WorkOrders.Order_No
@@ -152,9 +154,14 @@ Public Class InvoicePage
             invoiceDG.Columns("Location").DataPropertyName = "Location_Name"
             invoiceDG.Columns("DateCompleted").DataPropertyName = "Date_Complete"
 
+            If printInvoice Then
+                InvoiceDG.Columns("Amount").DataPropertyName = "Billed_Amount"
+            End If
+
             startDate.Value = CType(taskData.Compute("MIN(Date_Complete)", ""), DateTime)
             endDate.Value = CType(taskData.Compute("MAX(Date_Complete)", ""), DateTime)
 
+            AddHandler Me.Load, AddressOf UserControl_Load
             AddHandler invoiceDG.CellEndEdit, AddressOf invoiceDG_CellEndEdit
         End If
     End Sub
@@ -169,15 +176,17 @@ Public Class InvoicePage
                 row.Cells(e.ColumnIndex).Value = Nothing
             End If
     
-    
-            'Calculate the subtotal
-            Dim subtotal As Decimal = invoiceDG.Rows.Cast(Of DataGridViewRow)().
-                Where(Function(r) Not r.IsNewRow).
-                Sum(Function(r) Convert.ToDecimal(r.Cells(2).Value))
-            calc_subTotal.Text = subtotal.ToString("C2")
-            calc_Tax.Text = (subtotal * 0.082).ToString("C2")
-            calc_total.Text = (subtotal * 1.082).ToString("C2")
+            CalculateTotals()
         End If
+    End Sub
+
+    Private Sub CalculateTotals()
+        Dim subtotal As Decimal = invoiceDG.Rows.Cast(Of DataGridViewRow)().
+            Where(Function(r) Not r.IsNewRow AndAlso r.Cells(2).Value IsNot Nothing).
+            Sum(Function(r) Convert.ToDecimal(r.Cells(2).Value))
+        calc_subTotal.Text = subtotal.ToString("C2")
+        calc_Tax.Text = (subtotal * 0.082).ToString("C2")
+        calc_total.Text = (subtotal * 1.082).ToString("C2")
     End Sub
 
     Private Sub Save_Invoice_Amounts()
@@ -219,5 +228,47 @@ Public Class InvoicePage
     Private Sub CancelButton_Click(sender As Object, e As EventArgs) Handles cancelButton.Click
         Me.Parent.Controls.Add(New dashboard() With {.Dock = DockStyle.Fill})
         Me.Parent.Controls.Remove(Me)
+    End Sub
+    
+    Private Sub UserControl_Load(sender As Object, e As EventArgs) Handles Me.Load
+        Static hasLoaded As Boolean = False
+        CalculateTotals()
+    
+        If printInvoice AndAlso Not hasLoaded Then
+            Dim printDoc As New PrintDocument()
+            printDoc.DefaultPageSettings.Landscape = True ' Set to landscape mode
+            AddHandler printDoc.PrintPage, AddressOf PrintDoc_PrintPage
+    
+            ' Create a new PrintPreviewDialog using the PrintDocument.
+            Dim ppd As New PrintPreviewDialog With {
+                .Document = printDoc,
+                .WindowState = FormWindowState.Maximized
+            }
+    
+            ' Delay the ShowDialog method until after the form has fully loaded.
+            Me.BeginInvoke(New Action(Sub() ppd.ShowDialog()))
+    
+            hasLoaded = True
+        End If
+    End Sub
+    
+    Private Sub PrintDoc_PrintPage(sender As Object, e As PrintPageEventArgs)
+        Dim bmp As New Bitmap(Me.Width, Me.Height)
+        Me.DrawToBitmap(bmp, New Rectangle(0, 0, Me.Width, Me.Height))
+    
+        ' Scale down to 75%
+        e.Graphics.ScaleTransform(0.60F, 0.60F)
+    
+        ' Calculate the center points of the page and the image
+        Dim pageCenterX As Single = e.PageBounds.Width / 2
+        Dim pageCenterY As Single = e.PageBounds.Height / 2
+        Dim imageCenterX As Single = bmp.Width * 0.60F / 2
+        Dim imageCenterY As Single = bmp.Height * 0.60F / 2
+    
+        ' Adjust the image's position to center it on the page
+        Dim startX As Single = pageCenterX - imageCenterX
+        Dim startY As Single = pageCenterY - imageCenterY
+    
+        e.Graphics.DrawImage(bmp, startX, startY)
     End Sub
 End Class

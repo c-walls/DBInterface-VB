@@ -98,8 +98,9 @@ Public Class Dashboard
                                                                     FROM WorkOrders 
                                                                     LEFT JOIN Employees ON WorkOrders.Manager_ID = Employees.Emp_ID
                                                                     LEFT JOIN (SELECT Order_No, Assignment_No, Finish_Date, ROW_NUMBER() OVER (PARTITION BY Order_No ORDER BY Assignment_No DESC) AS rn
-                                                                             FROM WorkAssignments) LastAssignments ON WorkOrders.Order_No = LastAssignments.Order_No AND LastAssignments.rn = 1
-                                                                    WHERE WorkOrders.Order_No IN (SELECT Order_No FROM TaskOrders WHERE Date_Complete IS NULL)")
+                                                                                FROM WorkAssignments) LastAssignments ON WorkOrders.Order_No = LastAssignments.Order_No AND LastAssignments.rn = 1
+                                                                    WHERE WorkOrders.Order_No IN (SELECT Order_No FROM TaskOrders WHERE Date_Complete IS NULL)
+                                                                    ORDER BY LastAssignments.Assignment_No, Required_Date DESC")
 
         Case "Invoices"
             button1.Text = "Prepare Invoice"
@@ -180,7 +181,10 @@ Public Class Dashboard
                 Case "Work Orders" ' -- UPDATE WORK ASSIGNMENT --
 
                 Case "Invoices" ' -- PRINT INVOICE --
-
+                    Dim existingInvoice = dashboardDGV.Rows(rowIndex).Cells(0).Value.ToString()
+                    Dim invoicePage As New InvoicePage(existingInvoice, True) With {.Dock = DockStyle.Fill}
+                    Me.Parent.Controls.Add(invoicePage)
+                    Me.Parent.Controls.Remove(Me)
                 Case Else
                     MessageBox.Show($"Tab Select Error")
             End Select
